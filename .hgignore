@@ -1,0 +1,13 @@
+\.class$
+
+^datadump/.*
+
+# ignore test and tutorial directories
+test/.*$
+tests/.*$
+testsuite/.*$
+tutorial/.*$
+
+# Solr/Jetty
+^java/solr/server/work/.*
+^java/solr/server/solr/data/.*

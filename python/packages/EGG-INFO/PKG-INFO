@@ -1,0 +1,30 @@
+Metadata-Version: 1.0
+Name: SQLObject
+Version: 1.1.3
+Summary: Object-Relational Manager, aka database wrapper
+Home-page: http://sqlobject.org/
+Author: Ian Bicking
+Author-email: ianb@colorstudy.com
+License: LGPL
+Download-URL: http://cheeseshop.python.org/pypi/SQLObject/1.1.3
+Description: SQLObject is a popular *Object Relational Manager* for providing an
+        object interface to your database, with tables as classes, rows as
+        instances, and columns as attributes.
+        
+        SQLObject includes a Python-object-based query language that makes SQL
+        more abstract, and provides substantial database independence for
+        applications.
+        
+        Supports MySQL, PostgreSQL, SQLite, Firebird, Sybase, MSSQL and MaxDB (SAPDB).
+        
+        For development see the `subversion repository
+        <http://svn.colorstudy.com/SQLObject/branches/1.1/>`_
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
+Classifier: Programming Language :: Python
+Classifier: Topic :: Database
+Classifier: Topic :: Database :: Front-Ends
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
