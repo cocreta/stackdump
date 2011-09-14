@@ -1,4 +1,9 @@
+^JAVA_CMD$
+^PYTHON_CMD$
+
+# ignore working bytecode
 \.class$
+\.pyc$
 
 ^datadump/.*
 
