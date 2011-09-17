@@ -1,6 +1,9 @@
 ^JAVA_CMD$
 ^PYTHON_CMD$
 
+# ignore any data
+^data/.*$
+
 # ignore working bytecode
 \.class$
 \.pyc$
