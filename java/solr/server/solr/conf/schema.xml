@@ -494,21 +494,24 @@
        when adding a document.
    -->
 
+   <!-- we'll get the values out of the JSON, so most fields are not stored -->
+   <!-- fields are listed here so searches can be performed against them -->
    <!-- the ID field needs to be a string for the QueryElevationComponent -->
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
    <field name="siteName" type="string" indexed="true" stored="true" required="true" />
-   <field name="creationDate" type="tdate" indexed="true" stored="true" required="true"/>
-   <field name="viewCount" type="tint" indexed="true" stored="true" required="true"/>
+   <field name="creationDate" type="tdate" indexed="true" stored="false" required="true"/>
+   <field name="score" type="tint" indexed="true" stored="false" required="true"/>
+   <field name="viewCount" type="tint" indexed="true" stored="false" required="true"/>
    <!-- TODO: the title field should be boosted at index-time -->
    <field name="title" type="text_general" indexed="true" stored="false" required="true"/>
    <field name="question-json" type="string" indexed="false" stored="true" required="true"/>
-   <field name="answer-json" type="string" indexed="false" stored="true" multiValued="true" required="true"/>
+   <field name="answer-json" type="string" indexed="false" stored="true" multiValued="true"/>
    <field name="ownerUserId" type="tint" indexed="true" stored="true" required="true"/>
-   <field name="lastEditorUserId" type="tint" indexed="false" stored="true"/>
-   <field name="lastActivityDate" type="tdate" indexed="true" stored="true"/>
-   <field name="communityOwnedDate" type="tdate" indexed="false" stored="true" required="true"/>
-   <field name="closedDate" type="tdate" indexed="false" stored="true"/>
-   <field name="tag" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="lastEditorUserId" type="tint" indexed="false" stored="false"/>
+   <field name="lastActivityDate" type="tdate" indexed="true" stored="false"/>
+   <field name="communityOwnedDate" type="tdate" indexed="false" stored="false"/>
+   <field name="closedDate" type="tdate" indexed="false" stored="false"/>
+   <field name="tag" type="string" indexed="true" stored="false" multiValued="true"/>
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
