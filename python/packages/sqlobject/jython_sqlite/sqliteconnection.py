@@ -25,34 +25,14 @@ class SQLiteConnection(DBAPI):
     def __init__(self, filename, autoCommit=1, **kw):
         from com.ziclix.python.sql import zxJDBC as sqlite
         self.module = sqlite
-        self.using_sqlite2 = True
+        #self.using_sqlite2 = False
         self.filename = filename  # full path to sqlite-db-file
         self._memory = filename == ':memory:'
-        if self._memory and not self.using_sqlite2:
-            raise ValueError("You must use sqlite2 to use in-memory databases")
-        # connection options
-        opts = {}
-        if self.using_sqlite2:
-            if autoCommit:
-                opts["isolation_level"] = None
-            if 'factory' in kw:
-                factory = kw.pop('factory')
-                if isinstance(factory, str):
-                    factory = globals()[factory]
-                opts['factory'] = factory(sqlite)
-        else:
-            opts['autocommit'] = Boolean(autoCommit)
-            if 'encoding' in kw:
-                opts['encoding'] = kw.pop('encoding')
-            if 'mode' in kw:
-                opts['mode'] = int(kw.pop('mode'), 0)
-        if 'timeout' in kw:
-            if self.using_sqlite2:
-                opts['timeout'] = float(kw.pop('timeout'))
-            else:
-                opts['timeout'] = int(float(kw.pop('timeout')) * 1000)
-        if 'check_same_thread' in kw:
-            opts["check_same_thread"] = Boolean(kw.pop('check_same_thread'))
+        #if self._memory and not self.using_sqlite2:
+        #    raise ValueError("You must use sqlite2 to use in-memory databases")
+        opts = { }
+        opts['autocommit'] = autoCommit
+
         # use only one connection for sqlite - supports multiple)
         # cursors per connection
         self._connOptions = opts
@@ -61,13 +41,17 @@ class SQLiteConnection(DBAPI):
         self._threadPool = {}
         self._threadOrigination = {}
         if self._memory:
-            self._memoryConn = self.module.connect('jdbc:sqlite:%s' % self.filename, None, None, 'org.sqlite.JDBC')
+            self._memoryConn = self.module.connect('jdbc:sqlite::memory:', None, None, 'org.sqlite.JDBC')
+            self._memoryConn.autocommit = autoCommit
             # Convert text data from SQLite to str, not unicode -
             # SQLObject converts it to unicode itself.
             #self._memoryConn.text_factory = str
 
     @classmethod
     def _connectionFromParams(cls, user, password, host, port, path, args):
+        if host == ':memory:':
+            host = None
+        
         assert host is None and port is None, (
             "SQLite can only be used locally (with a URI like "
             "sqlite:/file or sqlite:///file, not sqlite://%s%s)" %
@@ -142,25 +126,18 @@ class SQLiteConnection(DBAPI):
             conn.close()
 
     def _setAutoCommit(self, conn, auto):
-        if self.using_sqlite2:
-            if auto:
-                conn.isolation_level = None
-            else:
-                conn.isolation_level = ""
-        else:
-            conn.autocommit = auto
+        conn.autocommit = auto
 
     def _setIsolationLevel(self, conn, level):
-        if not self.using_sqlite2:
-            return
-        conn.isolation_level = level
+        # apparently not applicable for sqlite2 drivers
+        return
 
     def makeConnection(self):
         if self._memory:
             return self._memoryConn
         
-        # TODO: self._connOptions is ignored because it causes errors
         conn = self.module.connect('jdbc:sqlite:%s' % self.filename, '', '', 'org.sqlite.JDBC')
+        conn.autocommit = self._connOptions.get('autocommit', 1)
         # TODO: zxjdbc.connect does not have a text_factory property
         #conn.text_factory = str # Convert text data to str, not unicode
         return conn
