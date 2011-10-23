@@ -149,9 +149,15 @@ try:
     # For Python < 2.6 or people using a newer version of simplejson
     import simplejson as json
 except ImportError:
-    # For Python >= 2.6
-    import json
-
+    try:
+        # For Python >= 2.6
+        import json
+    except ImportError:
+        # Jython has no in-built JSON package, so we'll use the specially 
+        # included simplejson version. We don't want that to override the 
+        # Python-bundled version though, hence this hack.
+        import jython_simplejson as simplejson
+        import jython_simplejson as json
 try:
     # Desirable from a timeout perspective.
     from httplib2 import Http

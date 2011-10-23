@@ -2,6 +2,8 @@
 
 # This script takes extracted site files and inserts them into the database.
 
+from __future__ import with_statement
+
 import sys
 import os
 import xml.sax
@@ -64,7 +66,11 @@ class User(SQLObject):
     downVotes = IntCol()
 
 # SAX HANDLERS
-ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+# Jython can't handle the %f format specifier
+if is_jython:
+    ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'
+else:
+    ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 class BaseContentHandler(xml.sax.ContentHandler):
     """
@@ -612,3 +618,5 @@ sqlhub.threadConnection.commit(close=True)
 print('[post]\tProcessed %d rows.' % (handler.row_count))
 
 print('[post] FINISHED PARSING POSTS.\n')
+
+# TODO: delete comments?
