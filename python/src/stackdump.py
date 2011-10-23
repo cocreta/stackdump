@@ -1,5 +1,4 @@
 from bottle import route, run, static_file
-import servers
 
 import sys
 import os
