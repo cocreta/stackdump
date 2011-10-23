@@ -2,12 +2,10 @@
 
 ##
 # This script attempts to find a version of Python on the system PATH, and
-# checks that it is 2.5+. If not, it attempts to find Java, and use Jython
-# instead.
+# checks that it is 2.5+.
 #
 # A alternate Python command can be specified in a file named PYTHON_CMD in this
-# script's directory. The same applies for Java, in a file named JAVA_CMD.
-# These paths will override any lookup on the system PATH.
+# script's directory. This path will override any lookup on the system PATH.
 ##
 
 # FUNCTIONS
@@ -51,31 +49,3 @@ then
         exit $?
     fi
 fi
-
-# no valid Python version, so we're going to use Jython instead
-echo "Python not found, attempting to use Jython..."
-
-JAVA_CMD=java
-if [ -e "$SCRIPT_DIR/JAVA_CMD" ]
-then
-    JAVA_CMD=`cat $SCRIPT_DIR/JAVA_CMD`
-fi
-
-if [ -z "`which $JAVA_CMD 2>/dev/null`" ]
-then
-    echo "Java not found. Try specifying path in a file named JAVA_CMD in the script dir."
-    exit 1
-fi
-
-echo "Using Jython with Java at `which $JAVA_CMD`"
-
-# this script is done this way due to Jython's quirks.
-# see http://wiki.python.org/jython/JythonFaq/DistributingJythonScripts#Using_the_Class_Path
-CLASSPATH=$SCRIPT_DIR/java/lib
-for jar in $SCRIPT_DIR/java/lib/*.jar
-do
-    CLASSPATH=$jar:$CLASSPATH
-done
-
-JYTHONPATH=$SCRIPT_DIR/python/packages:$SCRIPT_DIR/python/src:$CLASSPATH:$JYTHONPATH 
-$JAVA_CMD -cp $CLASSPATH -Dpython.path=$JYTHONPATH org.python.util.jython "$@"
