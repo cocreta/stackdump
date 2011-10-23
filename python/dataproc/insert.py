@@ -8,7 +8,6 @@ import sys
 import os
 import xml.sax
 from datetime import datetime
-import platform
 import re
 
 from sqlobject import *
@@ -21,12 +20,9 @@ except ImportError:
     # For Python >= 2.6
     import json
 
-is_jython = 'Java' in platform.system()
 script_dir = os.path.dirname(sys.argv[0])
 
 # MODELS
-# use UnicodeCol instead of StringCol; StringCol defaults to ascii when encoding
-# is unspecified, as it is with Jython zxJDBC.
 class Site(SQLObject):
     name = UnicodeCol()
     desc = UnicodeCol()
@@ -66,11 +62,7 @@ class User(SQLObject):
     downVotes = IntCol()
 
 # SAX HANDLERS
-# Jython can't handle the %f format specifier
-if is_jython:
-    ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'
-else:
-    ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 class BaseContentHandler(xml.sax.ContentHandler):
     """
@@ -124,8 +116,7 @@ class BadgeContentHandler(BaseContentHandler):
         
         try:
             d = self.cur_props = { 'site' : self.site }
-            # this hack to get the Id attr is needed due to Jython bug #1768
-            d['sourceId'] = is_jython and int(attrs._attrs.getValue('Id')) or int(attrs['Id'])
+            d['sourceId'] = int(attrs['Id'])
             d['userId'] = int(attrs.get('UserId', 0))
             d['name'] = attrs.get('Name', '')
             d['date'] = datetime.strptime(attrs.get('Date'), ISO_DATE_FORMAT)
@@ -156,8 +147,7 @@ class CommentContentHandler(BaseContentHandler):
         
         try:
             d = self.cur_props = { 'site' : self.site }
-            # this hack to get the Id attr is needed due to Jython bug #1768
-            d['sourceId'] = is_jython and int(attrs._attrs.getValue('Id')) or int(attrs['Id'])
+            d['sourceId'] = int(attrs['Id'])
             d['postId'] = int(attrs.get('PostId', 0))
             d['score'] = int(attrs.get('Score', 0))
             d['text'] = attrs.get('Text', '')
@@ -200,8 +190,7 @@ class UserContentHandler(BaseContentHandler):
         
         try:
             d = self.cur_props = { 'site' : site }
-            # this hack to get the Id attr is needed due to Jython bug #1768
-            d['sourceId'] = is_jython and int(attrs._attrs.getValue('Id')) or int(attrs['Id'])
+            d['sourceId'] = int(attrs['Id'])
             d['reputation'] = int(attrs.get('Reputation', 0))
             d['creationDate'] = datetime.strptime(attrs.get('CreationDate'), ISO_DATE_FORMAT)
             d['displayName'] = attrs.get('DisplayName', '')
@@ -268,8 +257,7 @@ class PostContentHandler(xml.sax.ContentHandler):
         
         try:
             d = self.cur_props = { }
-            # this hack to get the Id attr is needed due to Jython bug #1768
-            d['id'] = is_jython and int(attrs._attrs.getValue('Id')) or int(attrs['Id'])
+            d['id'] = int(attrs['Id'])
             
             if attrs['PostTypeId'] == '2':
                 # I am an answer.
@@ -521,12 +509,8 @@ db_path = os.path.abspath(os.path.join(script_dir, '../../data/stackdump.sqlite'
 
 # connect to the database
 print('Connecting to the database...')
-if is_jython:
-    conn_str = 'jython_sqlite://' + db_path
-else: # assume cPython
-    conn_str = 'sqlite://' + db_path
+conn_str = 'sqlite://' + db_path
 sqlhub.processConnection = connectionForURI(conn_str)
-#sqlhub.processConnection = connectionForURI('jython_sqlite://:memory:')
 print('Connected.\n')
 
 # connect to solr

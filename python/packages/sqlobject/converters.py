@@ -1,13 +1,6 @@
 import sys
 from array import array
 
-# Jython doesn't have the buffer sequence type (bug #1521).
-# using this workaround instead.
-try:
-    buffer
-except NameError, e:
-    buffer = str
-
 try:
     import mx.DateTime.ISO
     origISOStr = mx.DateTime.ISO.strGMT
