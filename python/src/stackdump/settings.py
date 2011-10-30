@@ -7,3 +7,12 @@
 SERVER_ADAPTER = 'cherrypy'
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8080
+
+# if the website is hosted under a subpath, specify it here. It must end with a
+# slash.
+APP_URL_ROOT = '/'
+
+# settings that are available in templates
+TEMPLATE_SETTINGS = [
+    'APP_URL_ROOT'
+]
