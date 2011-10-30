@@ -5,7 +5,7 @@ import os
 
 # STATIC VARIABLES
 BOTTLE_ROOT = os.path.abspath(os.path.dirname(sys.argv[0]))
-MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../media')
+MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
 
 # WEB REQUEST METHODS
 
