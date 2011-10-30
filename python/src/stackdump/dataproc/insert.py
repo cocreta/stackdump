@@ -10,8 +10,10 @@ import xml.sax
 from datetime import datetime
 import re
 
-from sqlobject import *
+from sqlobject import sqlhub, connectionForURI, AND, OR
 from pysolr import Solr
+
+from stackdump.models import Site, Badge, Comment, User
 
 try:
     # For Python < 2.6 or people using a newer version of simplejson
@@ -21,45 +23,6 @@ except ImportError:
     import json
 
 script_dir = os.path.dirname(sys.argv[0])
-
-# MODELS
-class Site(SQLObject):
-    name = UnicodeCol()
-    desc = UnicodeCol()
-
-class Badge(SQLObject):
-    sourceId = IntCol()
-    site = ForeignKey('Site', cascade=True)
-    userId = IntCol()
-    name = UnicodeCol()
-    date = DateTimeCol()
-
-class Comment(SQLObject):
-    sourceId = IntCol()
-    site = ForeignKey('Site', cascade=True)
-    postId = IntCol()
-    score = IntCol()
-    text = UnicodeCol()
-    creationDate = DateTimeCol()
-    userId = IntCol()
-    
-    json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
-
-class User(SQLObject):
-    sourceId = IntCol()
-    site = ForeignKey('Site', cascade=True)
-    reputation = IntCol()
-    creationDate = DateTimeCol()
-    displayName = UnicodeCol()
-    emailHash = UnicodeCol()
-    lastAccessDate = DateTimeCol()
-    websiteUrl = UnicodeCol()
-    location = UnicodeCol()
-    age = IntCol()
-    aboutMe = UnicodeCol()
-    views = IntCol()
-    upVotes = IntCol()
-    downVotes = IntCol()
 
 # SAX HANDLERS
 ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
@@ -505,7 +468,7 @@ if not os.path.exists(xml_root):
     print('The given XML root path does not exist.')
     sys.exit(1)
 
-db_path = os.path.abspath(os.path.join(script_dir, '../../data/stackdump.sqlite'))
+db_path = os.path.abspath(os.path.join(script_dir, '../../../../data/stackdump.sqlite'))
 
 # connect to the database
 print('Connecting to the database...')
