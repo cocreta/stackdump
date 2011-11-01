@@ -7,6 +7,9 @@ from sqlobject import *
 class Site(SQLObject):
     name = UnicodeCol()
     desc = UnicodeCol()
+    key = UnicodeCol()
+    dump_date = UnicodeCol()
+    import_date = DateTimeCol()
 
 class Badge(SQLObject):
     sourceId = IntCol()

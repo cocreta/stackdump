@@ -9,6 +9,8 @@ import os
 import xml.sax
 from datetime import datetime
 import re
+from optparse import OptionParser
+from xml.etree import ElementTree
 
 from sqlobject import sqlhub, connectionForURI, AND, OR
 from pysolr import Solr
@@ -457,11 +459,19 @@ class PostContentHandler(xml.sax.ContentHandler):
         self.unfinished_questions.clear()
 
 # MAIN METHOD
-if len(sys.argv) != 2:
-    print('One argument is expected - the path to the extracted XML files.')
+parser = OptionParser(usage='usage: %prog [options] xml_root_dir')
+parser.add_option('-n', '--site-name', help='Name of the site.')
+parser.add_option('-d', '--site-desc', help='Description of the site (if not in sites).')
+parser.add_option('-k', '--site-key', help='Key of the site (if not in sites).')
+parser.add_option('-c', '--dump-date', help='Dump date of the site.')
+
+(cmd_options, cmd_args) = parser.parse_args()
+
+if len(cmd_args) < 1:
+    print('The path to the extracted XML files is required.')
     sys.exit(1)
 
-xml_root = sys.argv[1]
+xml_root = cmd_args[0]
 print('Using the XML root path: ' + xml_root + '\n')
 
 if not os.path.exists(xml_root):
@@ -489,36 +499,77 @@ Comment.createTable(ifNotExists=True)
 User.createTable(ifNotExists=True)
 print('Created.\n')
 
-# SITE NAME
-# get the site name from the first line of readme.txt. This could be fragile.
-with open(os.path.join(xml_root, 'readme.txt')) as f:
-    site_desc = f.readline().strip()
+# SITE INFO
+site_name = cmd_options.site_name
+dump_date = cmd_options.dump_date
+# only look if they were not specified at the command line
+if not (site_name and dump_date):
+    # get the site name from the first line of readme.txt. This could be fragile.
+    with open(os.path.join(xml_root, 'readme.txt')) as f:
+        site_readme_desc = f.readline().strip()
+    
+    # assume if there's a colon in the name, the name part is before, and the date
+    # part is after.
+    if ':' in site_readme_desc:
+        site_name, dump_date = site_readme_desc.split(':')
+        site_name = site_name.strip()
+        dump_date = dump_date.strip()
+    else:
+        site_name = site_readme_desc
+        dump_date = None
+    
+    # if the phrase ' - Data Dump' is in the site name, remove it
+    i = site_name.rfind(' - Data Dump')
+    if i >= 0:
+        site_name = site_name[:i].strip()
 
-# assume if there's a colon in the name, the name part is before, and the date
-# part is after.
-if ':' in site_desc:
-    site_name, site_date = site_desc.split(':')
-else:
-    site_name = site_desc
-    site_date = ''
+# look for the site in the sites RSS file
+site_desc = cmd_options.site_desc
+site_key = cmd_options.site_key
+if not (site_desc and site_key):
+    sites_file_path = os.path.join(script_dir, '../../../../data/sites')
+    if os.path.exists(sites_file_path):
+        with open(sites_file_path) as f:
+            sites_file = ElementTree.parse(f)
+            entries = sites_file.findall('{http://www.w3.org/2005/Atom}entry')
+            
+            for entry in entries:
+                entry_title = entry.find('{http://www.w3.org/2005/Atom}title').text
+                if site_name == entry_title:
+                    # this entry matches the detected site name
+                    # extract the key from the url - remove the http:// and .com
+                    site_key = entry.find('{http://www.w3.org/2005/Atom}id').text
+                    if site_key.startswith('http://'):
+                        site_key = site_key[len('http://'):]
+                    if site_key.endswith('.com'):
+                        site_key = site_key[:-len('.com')]
+                    if site_key.endswith('.stackexchange'):
+                        site_key = site_key[:-len('.stackexchange')]
+                    
+                    site_desc = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
 
-print('Site name is %s\n' % site_name)
+print 'Name: %s\nKey: %s\nDesc: %s\nDump Date: %s\n' % (site_name, site_key, site_desc, dump_date)
+
+if not (site_name and site_key and site_desc and dump_date):
+    print 'Could not get all the details for the site.'
+    print 'Use command-line parameters to specify the missing details (listed as None).'
+    sys.exit(1)
 
 # check if site is already in database; if so, purge the data.
 sites = Site.select(Site.q.name==site_name)
 # the site really shouldn't exist more than once, but just in case
 for site in sites:
-    print('Deleting site "%s" from the database... ' % site.desc)
+    print('Deleting site "%s" from the database... ' % site.name)
     sys.stdout.flush()
     Site.delete(site.id) # the relationship cascades, so other rows will be deleted
     print('Deleted.\n')
 
-print('Deleting site "%s" from the solr... ' % site_desc)
+print('Deleting site "%s" from the solr... ' % site_name)
 solr.delete(q='siteName:"%s"' % site_name)
 print('Deleted.\n')
 
 # create a new Site
-site = Site(name=site_name, desc=site_desc)
+site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date, import_date=datetime.now())
 
 # BADGES
 print('[badge] PARSING BADGES...')
