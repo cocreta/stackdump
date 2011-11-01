@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Stackdump // {{ site.name }} Home{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="span16">
+            <div class="search-container">
+                <img class="site-logo" src="{{ SETTINGS.APP_URL_ROOT }}media/images/logos/{{ site.key }}.png" alt="{{ site.name }} logo" />
+                <h1 class="site-title">
+                    {{ site.name }}
+                    <small class="tagline">{{ site.desc }}</small>
+                </h1>
+                <form id="search" method="post" action="{{ SETTINGS.APP_URL_ROOT }}{{ site_root_path }}search">
+                    <input type="text" class="xlarge" name="q" />
+                    <input type="submit" class="btn primary" value="Search" />
+                </form>
+            </div>
+            
+            <div class="random-questions-container">
+                <h3>Random questions</h3>
+                <ul class="random-questions">
+                    <li>
+                        Question 1
+                    </li>
+                    <li>
+                        Question 2
+                    </li>
+                    <li>
+                        Question 3
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div> 
+{% endblock %}

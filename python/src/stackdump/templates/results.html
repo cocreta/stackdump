@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}Stackdump search for "{{ query }}"{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="span16">
+            <ul id="search-results">
+                {% for r in results %}
+                <li>{{ r }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div> 
+{% endblock %}

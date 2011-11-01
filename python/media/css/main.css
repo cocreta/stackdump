@@ -1,0 +1,88 @@
+/* don't want it to have a fixed position; so we'll override it */
+.topbar {
+    position: absolute;
+}
+
+.topbar-text {
+    float: left;
+    display: block;
+    padding: 8px 2px 12px;
+    color: grey;
+    font-size: 20px;
+    font-weight: 200;
+    line-height: 1;
+}
+
+.topbar-text a {
+    color: white;
+}
+
+.topbar-divider {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+/* leave enough gap for the topbar */
+#content {
+    margin-top: 40px;
+}
+
+.search-container {
+    padding: 60px;
+}
+
+.site-logo {
+    float: left;
+}
+
+.site-title {
+    padding-left: 64px; /* 48px for logo + 16px for padding */
+}
+
+#search {
+    margin-top: 40px;
+}
+
+.tagline {
+    display: block;
+}
+
+.random-questions-container {
+    padding-left: 60px;
+    padding-right: 60px;
+}
+
+.available-sites-container {
+    margin-top: 40px;
+}
+
+.available-sites {
+    list-style-image: none;
+    list-style-type: none;
+    margin-left: 0;
+}
+
+.available-sites li {
+    clear: both;
+    margin-bottom: 16px;
+}
+
+.available-sites img {
+    float: left;
+}
+
+.available-sites h6 {
+    padding-top: 7px;
+    line-height: normal;
+}
+
+.available-sites .tagline {
+    padding-top: 3px;
+}
+
+#footer {
+    margin-top: 50px;
+    border-top: solid 1px #999999;
+    background-color: #CCCCCC;
+    padding: 7px 10px;
+}

@@ -10,7 +10,38 @@
 </head>
 
 <body>
-{%- block body %}
-{% endblock -%}
+    <div class="topbar"> 
+        <div class="fill"> 
+            <div class="container">
+                <span class="topbar-text">
+                    <a href="{{ SETTINGS.APP_URL_ROOT }}">Stackdump</a>
+                    {% if site %}
+                    <span class="topbar-divider">//</span>
+                    <a href="{{ SETTINGS.APP_URL_ROOT }}{{ site_root_path }}">{{ site.name }}</a>
+                    from {{ site.dump_date }}
+                    {% endif %}
+                </span>
+                
+                
+                <form method="get" action="{{ SETTINGS.APP_URL_ROOT }}{{ site_root_path }}search" class="pull-right"> 
+                    <input type="text" placeholder="Search" />
+                </form> 
+            </div> 
+        </div> 
+    </div>
+    
+    <div id="content">
+    <div class="container">
+    {%- block body %}
+    {% endblock -%}
+    </div>
+    </div>
+    
+    <div id="footer">
+        Stackdump is licensed under
+        <a href="http://en.wikipedia.org/wiki/MIT_License">MIT License</a>. The
+        contents is licensed under <a href="http://creativecommons.org/licenses/by-sa/3.0/">
+        Creative Commons [cc-wiki]</a>.
+    </div>
 </body>
 </html>
