@@ -1,5 +1,7 @@
 import sys
 import os
+import threading
+import functools
 
 from bottle import route, run, static_file, debug, abort, request, redirect
 from jinja2 import Environment, PackageLoader
@@ -12,11 +14,92 @@ from stackdump.models import Site, Badge, Comment, User
 BOTTLE_ROOT = os.path.abspath(os.path.dirname(sys.argv[0]))
 MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
 
-# hopefully this is thread-safe; not sure though. Will need to experiment/check.
-# TODO: thread-safe?
-TEMPLATE_ENV = Environment(loader=PackageLoader('stackdump', 'templates'))
+
+# THREAD LOCAL VARIABLES
+thread_locals = threading.local()
+
+
+# RESOURCE DECORATORS
+
+def uses_templates(fn):
+    '''\
+    If called without a function, the template environment is initialised and
+    returned.
+    
+    Otherwise, the function is wrapped to ensure the template environment is
+    created before the function is executed.\
+    '''
+    def init_templates():
+        if not hasattr(thread_locals, 'template_env'):
+            thread_locals.template_env = Environment(loader=PackageLoader('stackdump', 'templates'))
+    
+    if not fn:
+        init_templates()
+        return None
+    
+    else:
+        def wrapped(*args, **kwargs):
+            init_templates()
+            return fn(*args, **kwargs)
+    
+        return functools.wraps(fn)(wrapped)
+
+def uses_solr(fn):
+    '''\
+    If called without a function, the Solr connection is initialised and
+    returned.
+    
+    Otherwise, the function is wrapped to ensure the Solr connection is
+    created before the function is executed.\
+    '''
+    def init_solr():
+        if not hasattr(thread_locals, 'solr_conn'):
+            thread_locals.solr_conn = Solr("http://localhost:8983/solr/")
+    
+    if not fn:
+        init_solr()
+        return None
+    
+    else:
+        def wrapped(*args, **kwargs):
+            init_solr()
+            return fn(*args, **kwargs)
+    
+        return functools.wraps(fn)(wrapped)
+
+def uses_db(fn):
+    '''\
+    If called without a function, the database connection is initialised and
+    returned.
+    
+    Otherwise, the function is wrapped to ensure the database connection is
+    created before the function is executed.\
+    '''
+    def init_db():
+        if not hasattr(thread_locals, 'db_conn'):
+            db_path = os.path.abspath(os.path.join(BOTTLE_ROOT, '../../../data/stackdump.sqlite'))
+            conn_str = 'sqlite://' + db_path
+            thread_locals.db_conn = sqlhub.threadConnection = connectionForURI(conn_str)
+    
+    if not fn:
+        init_db()
+        return None
+    
+    else:
+        def wrapped(*args, **kwargs):
+            init_db()
+            return fn(*args, **kwargs)
+
+        return functools.wraps(fn)(wrapped)
+
+# END RESOURCE DECORATORS
+
 
 # WEB REQUEST METHODS
+
+# all decorators must appear AFTER the route decorators. Any decorators that
+# appear above the route decorators will be silently ignored, presumably because
+# Bottle caches view functions when the route decorator is called.
 
 # this method MUST sit above the generic static media server, otherwise it won't
 # be hit and you will get 'file not found' errors when looking for a
@@ -37,6 +120,8 @@ def serve_static(filename):
     return static_file(filename, root=MEDIA_ROOT)
 
 @route('/')
+@uses_templates
+@uses_db
 def index():
     context = { }
     context['site_root_path'] = ''
@@ -45,6 +130,8 @@ def index():
 
 @route('/:site_key#[\w\.]+#')
 @route('/:site_key#[\w\.]+#/')
+@uses_templates
+@uses_db
 def site_index(site_key):
     context = { }
     context['site_root_path'] = '%s/' % site_key
@@ -57,6 +144,8 @@ def site_index(site_key):
     return render_template('site_index.html', context)
 
 @route('/search')
+@uses_templates
+@uses_solr
 def search():
     query = request.GET.get('q')
     if not query:
@@ -66,7 +155,7 @@ def search():
     rows_per_page = request.GET.get('r', 10)
     
     # perform search
-    results = solr.search(query, start=page*rows_per_page, rows=rows_per_page)
+    results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
     
     context = { }
     # TODO: scrub this first to avoid injection attacks?
@@ -76,6 +165,8 @@ def search():
     return render_template('results.html', context)
 
 @route('/:site_key#[\w\.]+#/search')
+@uses_templates
+@uses_solr
 def site_search(site_key):
     context = { }
     context['site_root_path'] = '%s/' % site_key
@@ -93,7 +184,7 @@ def site_search(site_key):
     rows_per_page = request.GET.get('r', 10)
     
     # perform search
-    results = solr.search(query, start=page*rows_per_page, rows=rows_per_page)
+    results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
     
     # TODO: scrub this first to avoid injection attacks?
     context['query'] = query
@@ -103,7 +194,25 @@ def site_search(site_key):
 
 # END WEB REQUEST METHODS
 
+
 # VIEW HELPERS
+
+def template_env():
+    # check that the template environment was initialised
+    uses_templates(None)
+    return thread_locals.template_env
+
+def solr_conn():
+    # check that the Solr connection was initialised
+    uses_solr(None)
+    return thread_locals.solr_conn
+
+# This method is a bit useless, because the objects aren't accessed directly
+# from the connection.
+def db_conn():
+    # check that the database connection was initialised
+    uses_db(None)
+    return thread_locals.db_conn
 
 def render_template(template_path, context=None):
     if not context:
@@ -111,7 +220,7 @@ def render_template(template_path, context=None):
     
     context['SETTINGS'] = get_template_settings()
     
-    return TEMPLATE_ENV.get_template(template_path).render(**context)
+    return template_env().get_template(template_path).render(**context)
 
 def get_template_settings():
     template_settings = { }
@@ -131,22 +240,6 @@ if __name__ == '__main__':
     # BOTTLE_CHILD env var is True if this is the child process.
     if os.environ.get('BOTTLE_CHILD', True):
         print('Serving media from: %s' % MEDIA_ROOT)
-        
-        # connect to the data sources
-        db_path = os.path.abspath(os.path.join(BOTTLE_ROOT, '../../../data/stackdump.sqlite'))
-    
-        # connect to the database
-        # TODO: thread-safe?
-        print('Connecting to the database...')
-        conn_str = 'sqlite://' + db_path
-        sqlhub.processConnection = connectionForURI(conn_str)
-        print('Connected.\n')
-        
-        # connect to solr
-        # TODO: thread-safe?
-        print('Connecting to solr...')
-        solr = Solr("http://localhost:8983/solr/")
-        print('Connected.\n')
     
     # load the settings file
     __import__('settings')
