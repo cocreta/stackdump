@@ -31,7 +31,14 @@ def uses_templates(fn):
     '''
     def init_templates():
         if not hasattr(thread_locals, 'template_env'):
-            thread_locals.template_env = Environment(loader=PackageLoader('stackdump', 'templates'))
+            thread_locals.template_env = Environment(
+                loader=PackageLoader('stackdump', 'templates'),
+                # always auto-escape.
+                autoescape=lambda template_name: True,
+                # but allow auto-escaping to be disabled explicitly within the
+                # template.
+                extensions=['jinja2.ext.autoescape']
+            )
     
     if not fn:
         init_templates()
@@ -147,6 +154,7 @@ def site_index(site_key):
 @uses_templates
 @uses_solr
 def search():
+    # TODO: scrub this first to avoid Solr injection attacks?
     query = request.GET.get('q')
     if not query:
         redirect(settings.APP_URL_ROOT)
@@ -158,7 +166,7 @@ def search():
     results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
     
     context = { }
-    # TODO: scrub this first to avoid injection attacks?
+    # TODO: scrub this first to avoid HTML injection attacks?
     context['query'] = query
     context['results'] = results
     
@@ -176,6 +184,7 @@ def site_search(site_key):
     except SQLObjectNotFound:
         raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
     
+    # TODO: scrub this first to avoid Solr injection attacks?
     query = request.GET.get('q')
     if not query:
         redirect(settings.APP_URL_ROOT)
@@ -186,7 +195,7 @@ def site_search(site_key):
     # perform search
     results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
     
-    # TODO: scrub this first to avoid injection attacks?
+    # TODO: scrub this first to avoid HTML injection attacks?
     context['query'] = query
     context['results'] = results
     
