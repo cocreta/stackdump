@@ -18,6 +18,19 @@ TEMPLATE_ENV = Environment(loader=PackageLoader('stackdump', 'templates'))
 
 # WEB REQUEST METHODS
 
+# this method MUST sit above the generic static media server, otherwise it won't
+# be hit and you will get 'file not found' errors when looking for a
+# non-existent logo.
+@route('/media/logos/:site_key#[\w\.]+#.png')
+def site_logos(site_key):
+    root = os.path.join(MEDIA_ROOT, 'images/logos')
+    filename = '%s.png' % site_key
+    path = os.path.join(root, filename)
+    if os.path.exists(path):
+        return static_file(filename, root=root)
+    else:
+        return static_file('images/unknown_site_logo.png', root=MEDIA_ROOT)
+
 # Bottle will protect us against nefarious peeps using ../ hacks.
 @route('/media/:filename#.*#')
 def serve_static(filename):
@@ -30,8 +43,8 @@ def index():
     context['sites'] = Site.select()
     return render_template('index.html', context)
 
-@route('/:site_key#\w+#')
-@route('/:site_key#\w+#/')
+@route('/:site_key#[\w\.]+#')
+@route('/:site_key#[\w\.]+#/')
 def site_index(site_key):
     context = { }
     context['site_root_path'] = '%s/' % site_key
@@ -62,7 +75,7 @@ def search():
     
     return render_template('results.html', context)
 
-@route('/:site_key#\w+#/search')
+@route('/:site_key#[\w\.]+#/search')
 def site_search(site_key):
     context = { }
     context['site_root_path'] = '%s/' % site_key

@@ -19,3 +19,6 @@ tutorial/.*$
 # Solr/Jetty
 ^java/solr/server/work/.*
 ^java/solr/server/solr/data/.*
+
+# ignore the downloaded logos
+^python/media/images/logos/.*

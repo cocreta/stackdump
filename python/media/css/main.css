@@ -69,11 +69,13 @@
 
 .available-sites img {
     float: left;
+    margin-right: 7px;
 }
 
 .available-sites h6 {
     padding-top: 7px;
     line-height: normal;
+    margin-left: 55px; /* 48px for the logo, 7px for the padding */
 }
 
 .available-sites .tagline {

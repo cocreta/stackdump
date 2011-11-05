@@ -37,7 +37,7 @@
                 <ul class="available-sites">
                     {% for s in sites %}
                     <li>
-                        <img src="{{ SETTINGS.APP_URL_ROOT }}media/images/logos/{{ s.key }}.png" alt="{{ s.name }} logo" />
+                        <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ s.key }}.png" alt="{{ s.name }} logo" />
                         <h6>
                             <a href="{{ SETTINGS.APP_URL_ROOT }}{{ s.key }}/">{{ s.name }}</a>
                             <small class="tagline">{{ s.dump_date }}</small>
