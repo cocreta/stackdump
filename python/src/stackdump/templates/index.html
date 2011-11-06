@@ -32,9 +32,9 @@
             </div>
         </div>
         <div class="span4">
-            <div class="well available-sites-container">
+            <div class="well site-list-container">
                 <h3>Available sites</h3>
-                <ul class="available-sites">
+                <ul class="site-list">
                     {% for s in sites %}
                     <li>
                         <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ s.key }}.png" alt="{{ s.name }} logo" />

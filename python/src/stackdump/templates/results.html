@@ -5,11 +5,75 @@
 {% block body %}
     <div class="row">
         <div class="span16">
+            <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}search">
+                <input type="text" class="xlarge" name="q" value="{{ query }}" />
+                <input type="submit" class="btn primary" value="Search" />
+            </form>
+            
+            <ul class="tabs">
+                <li class="active"><a href="#">newest</a></li>
+                <li><a href="#">votes</a></li>
+                <li><a href="#">relevance</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="span12">
             <ul id="search-results">
                 {% for r in results %}
-                <li>{{ r }}</li>
+                <li>
+                    <div class="post-stats-vertical">
+                        <div class="post-stat">
+                            <p class="post-stat-value">{{ r.question.score }}</p>
+                            <p>vote{% if r.question.score != 1 %}s{% endif %}</p>
+                        </div>
+                        <div class="post-stat">
+                            <p class="post-stat-value">{{ r.answer|length }}</p>
+                            <p>answer{% if r.answer|length != 1 %}s{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="post-summary">
+                        <h3>{{ r.question.title }}</h3>
+                        <p>{{ r.question.body|striptags|truncate(256) }}</p>
+                        <p class="post-details">
+                            Asked by <strong>{{ r.question.ownerUserId }}</strong> on
+                            <strong>{{ r.question.creationDate }}</strong>.
+                        </p>
+                        <div class="post-tags">
+                            {% for t in r.question.tags|parse_se_tags %}
+                            <span class="label">{{ t }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </li>
                 {% endfor %}
             </ul>
         </div>
-    </div> 
+        <div class="span4">
+            <div class="total-hits">
+                <p>
+                    <span class="stat-value">{{ total_hits }}</span>
+                </p>
+                <p>
+                    posts matched your query <em>"{{ query }}"</em>.
+                </p>
+            </div>
+            
+            <div class="well site-list-container">
+                <h3>Narrow by site</h3>
+                <ul class="site-list">
+                    {% for s in sites %}
+                    <li>
+                        <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ s.key }}.png" alt="{{ s.name }} logo" />
+                        <h6>
+                            <a href="{{ SETTINGS.APP_URL_ROOT }}{{ s.key }}/search?q={{ query }}">{{ s.name }}</a>
+                            <small class="tagline">{{ s.dump_date }}</small>
+                        </h6>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
 {% endblock %}

@@ -2,6 +2,14 @@ import sys
 import os
 import threading
 import functools
+import re
+
+try:
+    # For Python < 2.6 or people using a newer version of simplejson
+    import simplejson as json
+except ImportError:
+    # For Python >= 2.6
+    import json
 
 from bottle import route, run, static_file, debug, abort, request, redirect
 from jinja2 import Environment, PackageLoader
@@ -18,6 +26,21 @@ MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
 # THREAD LOCAL VARIABLES
 thread_locals = threading.local()
 
+
+# CUSTOM TEMPLATE TAGS AND FILTERS
+
+def parse_se_tags(value):
+    '''\
+    Parses the string of tags as given in the StackExchange XML site dump. The
+    format is:
+    
+    <feature-request><filter>
+    '''
+    # if it isn't a string, just do nothing
+    if not isinstance(value, basestring):
+        return value
+    
+    return re.findall(r'<([^>]+)>', value)
 
 # RESOURCE DECORATORS
 
@@ -39,6 +62,7 @@ def uses_templates(fn):
                 # template.
                 extensions=['jinja2.ext.autoescape']
             )
+            thread_locals.template_env.filters['parse_se_tags'] = parse_se_tags
     
     if not fn:
         init_templates()
@@ -153,6 +177,7 @@ def site_index(site_key):
 @route('/search')
 @uses_templates
 @uses_solr
+@uses_db
 def search():
     # TODO: scrub this first to avoid Solr injection attacks?
     query = request.GET.get('q')
@@ -164,11 +189,16 @@ def search():
     
     # perform search
     results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
+    decode_json_fields(results)
     
     context = { }
+    context['site_root_path'] = ''
+    context['sites'] = Site.select()
+    
     # TODO: scrub this first to avoid HTML injection attacks?
     context['query'] = query
     context['results'] = results
+    context['total_hits'] = results.hits
     
     return render_template('results.html', context)
 
@@ -194,6 +224,7 @@ def site_search(site_key):
     
     # perform search
     results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
+    decode_json_fields(results)
     
     # TODO: scrub this first to avoid HTML injection attacks?
     context['query'] = query
@@ -238,6 +269,40 @@ def get_template_settings():
         template_settings[k] = settings.get(k, None)
     
     return template_settings
+
+def decode_json_fields(obj):
+    '''\
+    Looks for keys in obj that end in -json, decodes the corresponding value and
+    stores that in the key minus -json suffix.
+    
+    If the obj is only a dict, then wrap it in a list because the we also want
+    to process list of dicts. If it is not a dict, it is assumed to be a list.\
+    '''
+    if obj == None:
+        return obj
+    
+    if isinstance(obj, dict):
+        objs = [ obj ]
+    else:
+        objs = obj
+    
+    for o in objs:
+        for k in o.keys():
+            if k.endswith('-json'):
+                decoded_key = k[:-len('-json')]
+                
+                json_value = o[k]
+                if isinstance(json_value, list):
+                    decoded_list = [ ]
+                    for j in json_value:
+                        decoded_list.append(json.loads(j))
+                    
+                    o[decoded_key] = decoded_list
+                else: # assume it is a JSON string
+                    o[decoded_key] = json.loads(json_value)
+                
+                # remove the JSON string from the dict-object
+                del o[k]
 
 # END VIEW HELPERS
 

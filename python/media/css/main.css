@@ -52,34 +52,89 @@
     padding-right: 60px;
 }
 
-.available-sites-container {
+.site-list-container {
     margin-top: 40px;
 }
 
-.available-sites {
+.site-list {
     list-style-image: none;
     list-style-type: none;
     margin-left: 0;
 }
 
-.available-sites li {
+.site-list li {
     clear: both;
     margin-bottom: 16px;
 }
 
-.available-sites img {
+.site-list img {
     float: left;
     margin-right: 7px;
 }
 
-.available-sites h6 {
+.site-list h6 {
     padding-top: 7px;
     line-height: normal;
     margin-left: 55px; /* 48px for the logo, 7px for the padding */
 }
 
-.available-sites .tagline {
+.site-list .tagline {
     padding-top: 3px;
+}
+
+.total-hits {
+    color: #999999;
+    margin-top: 10px;
+}
+
+.total-hits p {
+    font-size: 16pt;
+    line-height: 20pt;
+}
+
+.stat-value {
+    font-size: 36pt;
+    font-weight: bold;
+}
+
+#search-results {
+    list-style-image: none;
+    list-style-type: none;
+    margin-left: 0;
+}
+
+#search-results li {
+    clear: both;
+    border-top: 1px solid #CCCCCC;
+}
+
+.post-stats-vertical {
+    float: left;
+    width: 64px;
+}
+
+.post-stat {
+    text-align: center;
+    background-color: #CCCCCC;
+    margin-bottom: 2px;
+    padding: 4px 3px;
+}
+
+.post-stat p {
+    margin-bottom: 0;
+}
+
+.post-stat-value {
+    font-weight: bold;
+    font-size: 16pt;
+}
+
+.post-summary {
+    padding-left: 72px; /* 64px for post-stats-vertical + 8px for padding */
+}
+
+.post-details {
+    float: right;
 }
 
 #footer {
