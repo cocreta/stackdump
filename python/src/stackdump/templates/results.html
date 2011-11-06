@@ -29,8 +29,8 @@
                             <p>vote{% if r.question.score != 1 %}s{% endif %}</p>
                         </div>
                         <div class="post-stat">
-                            <p class="post-stat-value">{{ r.answer|length }}</p>
-                            <p>answer{% if r.answer|length != 1 %}s{% endif %}</p>
+                            <p class="post-stat-value">{{ r.answers|length }}</p>
+                            <p>answer{% if r.answers|length != 1 %}s{% endif %}</p>
                         </div>
                     </div>
                     <div class="post-summary">
@@ -41,7 +41,7 @@
                             <strong>{{ r.question.creationDate }}</strong>.
                         </p>
                         <div class="post-tags">
-                            {% for t in r.question.tags|parse_se_tags %}
+                            {% for t in r.question.tags %}
                             <span class="label">{{ t }}</span>
                             {% endfor %}
                         </div>

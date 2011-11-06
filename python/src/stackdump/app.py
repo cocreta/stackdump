@@ -27,21 +27,6 @@ MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
 thread_locals = threading.local()
 
 
-# CUSTOM TEMPLATE TAGS AND FILTERS
-
-def parse_se_tags(value):
-    '''\
-    Parses the string of tags as given in the StackExchange XML site dump. The
-    format is:
-    
-    <feature-request><filter>
-    '''
-    # if it isn't a string, just do nothing
-    if not isinstance(value, basestring):
-        return value
-    
-    return re.findall(r'<([^>]+)>', value)
-
 # RESOURCE DECORATORS
 
 def uses_templates(fn):
@@ -62,7 +47,6 @@ def uses_templates(fn):
                 # template.
                 extensions=['jinja2.ext.autoescape']
             )
-            thread_locals.template_env.filters['parse_se_tags'] = parse_se_tags
     
     if not fn:
         init_templates()

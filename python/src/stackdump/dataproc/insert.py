@@ -201,7 +201,7 @@ class PostContentHandler(xml.sax.ContentHandler):
             AnswerCount="3" CommentCount="1" FavoriteCount="3" />
 
     """
-    TAGS_RE = re.compile(u'&lt;([\w\d\-]+)&gt;')
+    TAGS_RE = re.compile(u'<([^>]+)>')
     
     def __init__(self, site):
         self.site = site
@@ -385,7 +385,7 @@ class PostContentHandler(xml.sax.ContentHandler):
         doc['text'] = search_text
         
         # serialise answers to JSON
-        doc['answer-json'] = [ json.dumps(a, default=self.json_default_handler) for a in q['answers'] ]
+        doc['answers-json'] = [ json.dumps(a, default=self.json_default_handler) for a in q['answers'] ]
         
         # map other fields to search index doc
         doc['id'] = str(q['id'])
@@ -427,7 +427,7 @@ class PostContentHandler(xml.sax.ContentHandler):
             question_obj['closedDate'] = q['closedDate']
         question_obj['title'] = q['title']
         if 'tags' in q:
-            question_obj['tags'] = q['tags']
+            question_obj['tags'] = PostContentHandler.TAGS_RE.findall(q['tags'])
         question_obj['favoriteCount'] = q['favoriteCount']
         question_obj['comments'] = q['comments']
         
