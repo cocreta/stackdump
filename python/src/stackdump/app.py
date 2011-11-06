@@ -15,6 +15,7 @@ from bottle import route, run, static_file, debug, abort, request, redirect
 from jinja2 import Environment, PackageLoader
 from sqlobject import sqlhub, connectionForURI, AND, OR, SQLObjectNotFound 
 from pysolr import Solr
+import iso8601
 
 from stackdump.models import Site, Badge, Comment, User
 
@@ -25,6 +26,25 @@ MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
 
 # THREAD LOCAL VARIABLES
 thread_locals = threading.local()
+
+
+# CUSTOM TEMPLATE TAGS AND FILTERS
+
+def format_datetime(value):
+    '''\
+    Formats a datetime to something nice. If a string is given, an attempt will
+    be made at parsing it.
+    '''
+    if isinstance(value, basestring):
+        try:
+            value = iso8601.parse_date(value)
+        except iso8601.ParseError, e:
+            # couldn't parse it, so just return what we were given
+            return value
+    
+    return value.strftime('%d %b %Y %I:%M %p')
+
+# END CUSTOM TEMPLATE TAGS AND FILTERS
 
 
 # RESOURCE DECORATORS
@@ -47,6 +67,7 @@ def uses_templates(fn):
                 # template.
                 extensions=['jinja2.ext.autoescape']
             )
+            thread_locals.template_env.filters['format_datetime'] = format_datetime
     
     if not fn:
         init_templates()

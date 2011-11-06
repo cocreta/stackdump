@@ -38,7 +38,7 @@
                         <p>{{ r.question.body|striptags|truncate(256) }}</p>
                         <p class="post-details">
                             Asked by <strong>{{ r.question.ownerUserId }}</strong> on
-                            <strong>{{ r.question.creationDate }}</strong>.
+                            <strong>{{ r.question.creationDate|format_datetime }}</strong>.
                         </p>
                         <div class="post-tags">
                             {% for t in r.question.tags %}
