@@ -106,6 +106,17 @@
 #search-results li {
     clear: both;
     border-top: 1px solid #CCCCCC;
+    margin-bottom: 10px;
+    padding-right: 10px;
+}
+
+#search-results li:hover {
+    background-color: #F2F2F2;
+}
+
+#search-results li .clearfix {
+    clear: both;
+    height: 0;
 }
 
 .post-stats-vertical {
@@ -127,6 +138,7 @@
 .post-stat-value {
     font-weight: bold;
     font-size: 16pt;
+    color: #000000;
 }
 
 .post-summary {

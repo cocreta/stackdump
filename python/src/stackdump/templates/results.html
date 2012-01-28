@@ -34,7 +34,7 @@
                         </div>
                     </div>
                     <div class="post-summary">
-                        <h3>{{ r.question.title }}</h3>
+                        <h3><a href="#">{{ r.question.title }}</a></h3>
                         <p>{{ r.question.body|striptags|truncate(256) }}</p>
                         <p class="post-details">
                             Asked by <strong>{{ r.question.ownerUserId }}</strong> on
@@ -46,6 +46,8 @@
                             {% endfor %}
                         </div>
                     </div>
+                    {# hack to force a clear on all internal elements #}
+                    <div class="clearfix"></div>
                 </li>
                 {% endfor %}
             </ul>
