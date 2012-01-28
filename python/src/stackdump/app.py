@@ -3,6 +3,7 @@ import os
 import threading
 import functools
 import re
+import math
 
 try:
     # For Python < 2.6 or people using a newer version of simplejson
@@ -44,6 +45,37 @@ def format_datetime(value):
     
     return value.strftime('%d %b %Y %I:%M %p')
 
+def set_get_parameters(base_url, *new_parameters):
+    '''\
+    Adds the provided GET parameters to the base URL, adding a ? if necessary.
+    If the GET parameter already exists, it is overridden.
+    '''
+    parameters = [ ]
+    if '?' in base_url:
+        parameters = base_url[base_url.find('?')+1:].split('&')
+        base_url = base_url[:base_url.find('?')]
+    
+    for p in new_parameters:
+        parameter_name = '=' in p and p[:p.find('=')+1] or p
+        
+        # check to see if this parameter is already set
+        i = 0
+        p_replaced = False
+        while i < len(parameters):
+            cur_p = parameters[i]
+            # if it is, just replace it in place
+            if cur_p.startswith(parameter_name):
+                parameters[i] = p
+                p_replaced = True
+                break
+            
+            i += 1
+        
+        if not p_replaced:
+            parameters.append(p)
+    
+    return '%s?%s' % (base_url, '&'.join(parameters))
+
 # END CUSTOM TEMPLATE TAGS AND FILTERS
 
 
@@ -68,6 +100,7 @@ def uses_templates(fn):
                 extensions=['jinja2.ext.autoescape']
             )
             thread_locals.template_env.filters['format_datetime'] = format_datetime
+            thread_locals.template_env.filters['set_get_parameters'] = set_get_parameters
     
     if not fn:
         init_templates()
@@ -189,8 +222,8 @@ def search():
     if not query:
         redirect(settings.APP_URL_ROOT)
     
-    page = request.GET.get('p', 0)
-    rows_per_page = request.GET.get('r', 10)
+    page = int(request.GET.get('p', 0)) - 1
+    rows_per_page = int(request.GET.get('r', 10))
     
     # perform search
     results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
@@ -204,6 +237,9 @@ def search():
     context['query'] = query
     context['results'] = results
     context['total_hits'] = results.hits
+    context['current_page'] = page + 1 # page should be ones-based
+    context['rows_per_page'] = rows_per_page
+    context['total_pages'] =  int(math.ceil(float(results.hits) / rows_per_page))
     
     return render_template('results.html', context)
 
@@ -264,6 +300,7 @@ def render_template(template_path, context=None):
         context = { }
     
     context['SETTINGS'] = get_template_settings()
+    context['REQUEST'] = request
     
     return template_env().get_template(template_path).render(**context)
 
