@@ -41,7 +41,7 @@
                         <h3><a href="#">{{ r.question.title }}</a></h3>
                         <p>{{ r.question.body|striptags|truncate(256) }}</p>
                         <p class="post-details">
-                            Asked by <strong>{{ r.question.ownerUserId }}</strong> on
+                            Asked by <strong>{{ r.question.ownerUser.displayName }}</strong> on
                             <strong>{{ r.question.creationDate|format_datetime }}</strong>.
                         </p>
                         <div class="post-tags">

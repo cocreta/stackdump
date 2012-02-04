@@ -14,7 +14,7 @@ except ImportError:
 
 from bottle import route, run, static_file, debug, abort, request, redirect
 from jinja2 import Environment, PackageLoader
-from sqlobject import sqlhub, connectionForURI, AND, OR, SQLObjectNotFound 
+from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound 
 from pysolr import Solr
 import iso8601
 
@@ -246,6 +246,7 @@ def search():
                                  rows=rows_per_page,
                                  sort=sort_args[sort_by])
     decode_json_fields(results)
+    retrieve_users(results, question_only=True, ignore_comments=True)
     
     context = { }
     context['site_root_path'] = ''
@@ -285,6 +286,7 @@ def site_search(site_key):
     # perform search
     results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
     decode_json_fields(results)
+    retrieve_users(results)
     
     # TODO: scrub this first to avoid HTML injection attacks?
     context['query'] = query
@@ -364,6 +366,109 @@ def decode_json_fields(obj):
                 
                 # remove the JSON string from the dict-object
                 del o[k]
+
+def retrieve_users(results, question_only=False, ignore_comments=False):
+    '''\
+    Retrieves the user objects associated with the question objects.
+    '''
+    # get a list of all the user IDs
+    user_ids_by_site = { }
+    for r in results:
+        site_name = r['siteName']
+        if site_name not in user_ids_by_site.keys():
+            user_ids_by_site[site_name] = set()
+        
+        # the search result object itself
+        for k in r.keys():
+            if k.lower().endswith('userid'):
+                user_ids_by_site[site_name].add(r[k])
+        
+        # the question object
+        question = r['question']
+        for k in question.keys():
+            if k.lower().endswith('userid'):
+                user_ids_by_site[site_name].add(question[k])
+            
+            comments = question.get('comments')
+            if not ignore_comments and comments:
+                for c in comments:
+                    for ck in c.keys():
+                        if ck.lower().endswith('userid'):
+                            user_ids_by_site[site_name].add(c[ck])
+        
+        # the answers
+        answers = r.get('answers')
+        if not question_only and answers:
+            for a in answers:
+                for k in a.keys():
+                    if k.lower().endswith('userid'):
+                        user_ids_by_site[site_name].add(a[k])
+                
+                comments = a.get('comments')
+                if not ignore_comments and comments:
+                    for c in comments:
+                        for ck in c.keys():
+                            if ck.lower().endswith('userid'):
+                                user_ids_by_site[site_name].add(c[ck])
+    
+    # retrieve the user objects from the database by site
+    users_by_site = { }
+    for site_name in user_ids_by_site.keys():
+        site = Site.select(Site.q.name == site_name).getOne()
+        user_objects = User.select(AND(User.q.site == site,
+                                       IN(User.q.sourceId, list(user_ids_by_site[site_name]))
+                                  ))
+        
+        # convert results into a dict with user id as the key
+        users = { }
+        for u in user_objects:
+            users[u.sourceId] = u
+        
+        users_by_site[site_name] = users
+    
+    # place user objects into the dict
+    for r in results:
+        site_name = r['siteName']
+        
+        # the search result object itself
+        for k in r.keys():
+            if k.lower().endswith('userid'):
+                # use the same field name, minus the 'Id' on the end.
+                r[k[:-2]] = users_by_site[site_name].get(r[k])
+        
+        # the question object
+        question = r['question']
+        for k in question.keys():
+            if k.lower().endswith('userid'):
+                # use the same field name, minus the 'Id' on the end.
+                question[k[:-2]] = users_by_site[site_name].get(question[k])
+            
+        comments = question.get('comments')
+        if not ignore_comments and comments:
+            for c in comments:
+                for ck in c.keys():
+                    if ck.lower().endswith('userid'):
+                        # use the same field name, minus the 'Id' on the end.
+                        c[ck[:-2]] = users_by_site[site_name].get(c[ck])
+            
+            
+        
+        # the answers
+        answers = r.get('answers')
+        if not question_only and answers:
+            for a in answers:
+                for k in a.keys():
+                    if k.lower().endswith('userid'):
+                        # use the same field name, minus the 'Id' on the end.
+                        a[k[:-2]] = users_by_site[site_name].get(a[k])
+                
+                comments = a.get('comments')
+                if not ignore_comments and comments:
+                    for c in comments:
+                        for ck in c.keys():
+                            if ck.lower().endswith('userid'):
+                                # use the same field name, minus the 'Id' on the end.
+                                c[ck[:-2]] = users_by_site[site_name].get(c[ck])
 
 # END VIEW HELPERS
 
