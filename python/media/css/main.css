@@ -126,7 +126,7 @@
 
 .post-stat {
     text-align: center;
-    background-color: #CCCCCC;
+    background-color: #F2F2F2;
     margin-bottom: 2px;
     padding: 4px 3px;
 }
@@ -141,8 +141,17 @@
     color: #000000;
 }
 
+.post-stat-value-poor {
+    color: #AAAAAA;
+}
+
 .post-summary {
     padding-left: 72px; /* 64px for post-stats-vertical + 8px for padding */
+}
+
+.post-summary h3 {
+    line-height: normal;
+    padding: 7px 0;
 }
 
 .post-details {

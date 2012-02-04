@@ -25,11 +25,15 @@
                 <li>
                     <div class="post-stats-vertical">
                         <div class="post-stat">
-                            <p class="post-stat-value">{{ r.question.score }}</p>
+                            <p class="post-stat-value {% if r.question.score < 0 %}post-stat-value-poor{% endif %}">
+                                {{ r.question.score }}
+                            </p>
                             <p>vote{% if r.question.score != 1 %}s{% endif %}</p>
                         </div>
                         <div class="post-stat">
-                            <p class="post-stat-value">{{ r.answers|length }}</p>
+                            <p class="post-stat-value {% if r.answers|length == 0 %}post-stat-value-poor{% endif %}">
+                                {{ r.answers|length }}
+                            </p>
                             <p>answer{% if r.answers|length != 1 %}s{% endif %}</p>
                         </div>
                     </div>
