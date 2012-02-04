@@ -223,12 +223,28 @@ def search():
         redirect(settings.APP_URL_ROOT)
     
     page = int(request.GET.get('p', 0))
+    # page needs to be zero-based for pysolr
     page = (page > 0) and (page - 1) or page
+    
     rows_per_page = int(request.GET.get('r', 10))
     rows_per_page = (rows_per_page > 0) and rows_per_page or 10
     
+    sort_args = {
+        'newest' : 'creationDate desc',
+        'votes' : 'votes desc',
+        'relevance' : 'score desc' # score is the special keyword for the
+                                   # relevancy score in Lucene
+    }
+    sort_by = request.GET.get('s', 'relevance').lower()
+    # default to sorting by relevance
+    if sort_by not in sort_args.keys():
+        sort_by = 'relevance'
+    
     # perform search
-    results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
+    results = solr_conn().search(query,
+                                 start=page*rows_per_page,
+                                 rows=rows_per_page,
+                                 sort=sort_args[sort_by])
     decode_json_fields(results)
     
     context = { }
@@ -242,6 +258,7 @@ def search():
     context['current_page'] = page + 1 # page should be ones-based
     context['rows_per_page'] = rows_per_page
     context['total_pages'] =  int(math.ceil(float(results.hits) / rows_per_page))
+    context['sort_by'] = sort_by
     
     return render_template('results.html', context)
 

@@ -7,17 +7,17 @@
         <div class="span16">
             <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}search">
                 <input type="text" class="xlarge" name="q" value="{{ query }}" />
+                <input type="hidden" name="s" value="{{ sort_by }}" />
                 <input type="submit" class="btn primary" value="Search" />
             </form>
             
             <ul class="tabs">
-                <li class="active"><a href="#">newest</a></li>
-                <li><a href="#">votes</a></li>
-                <li><a href="#">relevance</a></li>
+                <li {% if sort_by == 'newest' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=newest') }}">newest</a></li>
+                <li {% if sort_by == 'votes' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=votes') }}">votes</a></li>
+                <li {% if sort_by == 'relevance' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=relevance') }}">relevance</a></li>
             </ul>
         </div>
     </div>
-    
     <div class="row">
         <div class="span12">
             <ul id="search-results">
