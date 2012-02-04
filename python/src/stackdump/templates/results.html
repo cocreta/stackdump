@@ -12,9 +12,9 @@
             </form>
             
             <ul class="tabs">
-                <li {% if sort_by == 'newest' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=newest') }}">newest</a></li>
-                <li {% if sort_by == 'votes' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=votes') }}">votes</a></li>
-                <li {% if sort_by == 'relevance' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=relevance') }}">relevance</a></li>
+                <li {% if sort_by == 'newest' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=newest', 'p=0') }}">newest</a></li>
+                <li {% if sort_by == 'votes' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=votes', 'p=0') }}">votes</a></li>
+                <li {% if sort_by == 'relevance' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=relevance', 'p=0') }}">relevance</a></li>
             </ul>
         </div>
     </div>
@@ -58,15 +58,17 @@
             <div class="pagination">
                 <ul>
                     {% if current_page > 1 %}
-                    <li class="prev"><a href="{{ REQUEST.url|set_get_parameters('p=' ~ (current_page - 1)) }}">&larr; Previous</a></li>
+                    {# the prev page is current_page - 2 because current_page is ones-based, but the p GET parameter is zero-based #}
+                    <li class="prev"><a href="{{ REQUEST.url|set_get_parameters('p=' ~ (current_page - 2)) }}">&larr; Previous</a></li>
                     {% else %}
                     <li class="prev disabled"><a href="#">&larr; Previous</a></li>
                     {% endif %}
                     {% for p in range(1, total_pages + 1) %}
-                    <li {% if p == current_page %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('p=' ~ p) }}">{{ p }}</a></li>
+                    <li {% if p == current_page %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('p=' ~ (p-1)) }}">{{ p }}</a></li>
                 {% endfor %}
                 {% if current_page != total_pages %}
-                <li class="next"><a href="{{ REQUEST.url|set_get_parameters('p=' ~ (current_page + 1)) }}">&rarr; Next</a></li>
+                {# the next page is just current_page because current_page is ones-based, but the p GET parameter is zero-based #}
+                <li class="next"><a href="{{ REQUEST.url|set_get_parameters('p=' ~ current_page) }}">&rarr; Next</a></li>
                 {% else %}
                 <li class="next disabled"><a href="#">&rarr; Next</a></li>
                 {% endif %}

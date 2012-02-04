@@ -222,9 +222,9 @@ def search():
     if not query:
         redirect(settings.APP_URL_ROOT)
     
+    # the page GET parameter is zero-based
     page = int(request.GET.get('p', 0))
-    # page needs to be zero-based for pysolr
-    page = (page > 0) and (page - 1) or page
+    if page < 0: page = 0
     
     rows_per_page = int(request.GET.get('r', 10))
     rows_per_page = (rows_per_page > 0) and rows_per_page or 10
@@ -256,7 +256,7 @@ def search():
     context['query'] = query
     context['results'] = results
     context['total_hits'] = results.hits
-    context['current_page'] = page + 1 # page should be ones-based
+    context['current_page'] = page + 1 # page template var is ones-based
     context['rows_per_page'] = rows_per_page
     context['total_pages'] =  int(math.ceil(float(results.hits) / rows_per_page))
     context['sort_by'] = sort_by
