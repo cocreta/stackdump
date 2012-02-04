@@ -500,7 +500,8 @@
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
    <field name="siteName" type="string" indexed="true" stored="true" required="true" />
    <field name="creationDate" type="tdate" indexed="true" stored="false" required="true"/>
-   <field name="score" type="tint" indexed="true" stored="false" required="true"/>
+   <!-- the field name in XML is score, but that's a reserved lucene keyword -->
+   <field name="votes" type="tint" indexed="true" stored="false" required="true"/>
    <field name="viewCount" type="tint" indexed="true" stored="false" required="true"/>
    <!-- TODO: the title field should be boosted at index-time -->
    <field name="title" type="text_general" indexed="true" stored="false" required="true"/>

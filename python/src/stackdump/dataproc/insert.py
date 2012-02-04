@@ -391,7 +391,8 @@ class PostContentHandler(xml.sax.ContentHandler):
         doc['id'] = str(q['id'])
         doc['siteName'] = self.site.name
         doc['creationDate'] = q['creationDate']
-        doc['score'] = q['score']
+        # the XML field name is score, but score is a reserved lucene keyword
+        doc['votes'] = q['score']
         doc['viewCount'] = q['viewCount']
         doc['title'] = q['title']
         doc['ownerUserId'] = q['ownerUserId']
