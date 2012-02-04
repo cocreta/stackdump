@@ -222,8 +222,10 @@ def search():
     if not query:
         redirect(settings.APP_URL_ROOT)
     
-    page = int(request.GET.get('p', 0)) - 1
+    page = int(request.GET.get('p', 0))
+    page = (page > 0) and (page - 1) or page
     rows_per_page = int(request.GET.get('r', 10))
+    rows_per_page = (rows_per_page > 0) and rows_per_page or 10
     
     # perform search
     results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
