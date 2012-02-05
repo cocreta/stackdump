@@ -389,7 +389,7 @@ class PostContentHandler(xml.sax.ContentHandler):
         
         # map other fields to search index doc
         doc['id'] = str(q['id'])
-        doc['siteName'] = self.site.name
+        doc['siteKey'] = self.site.key
         doc['creationDate'] = q['creationDate']
         # the XML field name is score, but score is a reserved lucene keyword
         doc['votes'] = q['score']
@@ -564,10 +564,10 @@ for site in sites:
     sys.stdout.flush()
     Site.delete(site.id) # the relationship cascades, so other rows will be deleted
     print('Deleted.\n')
-
-print('Deleting site "%s" from the solr... ' % site_name)
-solr.delete(q='siteName:"%s"' % site_name)
-print('Deleted.\n')
+    
+    print('Deleting site "%s" from the solr... ' % site.name)
+    solr.delete(q='siteKey:"%s"' % site.key)
+    print('Deleted.\n')
 
 # create a new Site
 site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date, import_date=datetime.now())
