@@ -217,80 +217,31 @@ def site_index(site_key):
 @uses_solr
 @uses_db
 def search():
-    # TODO: scrub this first to avoid Solr injection attacks?
-    query = request.GET.get('q')
-    if not query:
-        redirect(settings.APP_URL_ROOT)
-    
-    # the page GET parameter is zero-based
-    page = int(request.GET.get('p', 0))
-    if page < 0: page = 0
-    
-    rows_per_page = int(request.GET.get('r', 10))
-    rows_per_page = (rows_per_page > 0) and rows_per_page or 10
-    
-    sort_args = {
-        'newest' : 'creationDate desc',
-        'votes' : 'votes desc',
-        'relevance' : 'score desc' # score is the special keyword for the
-                                   # relevancy score in Lucene
-    }
-    sort_by = request.GET.get('s', 'relevance').lower()
-    # default to sorting by relevance
-    if sort_by not in sort_args.keys():
-        sort_by = 'relevance'
-    
-    # perform search
-    results = solr_conn().search(query,
-                                 start=page*rows_per_page,
-                                 rows=rows_per_page,
-                                 sort=sort_args[sort_by])
-    decode_json_fields(results)
-    retrieve_users(results, question_only=True, ignore_comments=True)
-    
     context = { }
     context['site_root_path'] = ''
     context['sites'] = Site.select()
     
-    # TODO: scrub this first to avoid HTML injection attacks?
-    context['query'] = query
-    context['results'] = results
-    context['total_hits'] = results.hits
-    context['current_page'] = page + 1 # page template var is ones-based
-    context['rows_per_page'] = rows_per_page
-    context['total_pages'] =  int(math.ceil(float(results.hits) / rows_per_page))
-    context['sort_by'] = sort_by
+    context.update(perform_search())
     
     return render_template('results.html', context)
 
 @route('/:site_key#[\w\.]+#/search')
 @uses_templates
 @uses_solr
+@uses_db
 def site_search(site_key):
     context = { }
     context['site_root_path'] = '%s/' % site_key
+    # the template uses this to allow searching on other sites
+    context['sites'] = Site.select()
     
     try:
         context['site'] = Site.selectBy(key=site_key).getOne()
     except SQLObjectNotFound:
         raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
     
-    # TODO: scrub this first to avoid Solr injection attacks?
-    query = request.GET.get('q')
-    if not query:
-        redirect(settings.APP_URL_ROOT)
-    
-    page = request.GET.get('p', 0)
-    rows_per_page = request.GET.get('r', 10)
-    
-    # perform search
-    results = solr_conn().search(query, start=page*rows_per_page, rows=rows_per_page)
-    decode_json_fields(results)
-    retrieve_users(results)
-    
-    # TODO: scrub this first to avoid HTML injection attacks?
-    context['query'] = query
-    context['results'] = results
+    # perform the search limited by this site
+    context.update(perform_search(site_key))
     
     return render_template('site_results.html', context)
 
@@ -374,27 +325,27 @@ def retrieve_users(results, question_only=False, ignore_comments=False):
     # get a list of all the user IDs
     user_ids_by_site = { }
     for r in results:
-        site_name = r['siteName']
-        if site_name not in user_ids_by_site.keys():
-            user_ids_by_site[site_name] = set()
+        site_key = r['siteKey']
+        if site_key not in user_ids_by_site.keys():
+            user_ids_by_site[site_key] = set()
         
         # the search result object itself
         for k in r.keys():
             if k.lower().endswith('userid'):
-                user_ids_by_site[site_name].add(r[k])
+                user_ids_by_site[site_key].add(r[k])
         
         # the question object
         question = r['question']
         for k in question.keys():
             if k.lower().endswith('userid'):
-                user_ids_by_site[site_name].add(question[k])
+                user_ids_by_site[site_key].add(question[k])
             
             comments = question.get('comments')
             if not ignore_comments and comments:
                 for c in comments:
                     for ck in c.keys():
                         if ck.lower().endswith('userid'):
-                            user_ids_by_site[site_name].add(c[ck])
+                            user_ids_by_site[site_key].add(c[ck])
         
         # the answers
         answers = r.get('answers')
@@ -402,21 +353,21 @@ def retrieve_users(results, question_only=False, ignore_comments=False):
             for a in answers:
                 for k in a.keys():
                     if k.lower().endswith('userid'):
-                        user_ids_by_site[site_name].add(a[k])
+                        user_ids_by_site[site_key].add(a[k])
                 
                 comments = a.get('comments')
                 if not ignore_comments and comments:
                     for c in comments:
                         for ck in c.keys():
                             if ck.lower().endswith('userid'):
-                                user_ids_by_site[site_name].add(c[ck])
+                                user_ids_by_site[site_key].add(c[ck])
     
     # retrieve the user objects from the database by site
     users_by_site = { }
-    for site_name in user_ids_by_site.keys():
-        site = Site.select(Site.q.name == site_name).getOne()
+    for site_key in user_ids_by_site.keys():
+        site = Site.select(Site.q.key == site_key).getOne()
         user_objects = User.select(AND(User.q.site == site,
-                                       IN(User.q.sourceId, list(user_ids_by_site[site_name]))
+                                       IN(User.q.sourceId, list(user_ids_by_site[site_key]))
                                   ))
         
         # convert results into a dict with user id as the key
@@ -424,24 +375,24 @@ def retrieve_users(results, question_only=False, ignore_comments=False):
         for u in user_objects:
             users[u.sourceId] = u
         
-        users_by_site[site_name] = users
+        users_by_site[site_key] = users
     
     # place user objects into the dict
     for r in results:
-        site_name = r['siteName']
+        site_key = r['siteKey']
         
         # the search result object itself
         for k in r.keys():
             if k.lower().endswith('userid'):
                 # use the same field name, minus the 'Id' on the end.
-                r[k[:-2]] = users_by_site[site_name].get(r[k])
+                r[k[:-2]] = users_by_site[site_key].get(r[k])
         
         # the question object
         question = r['question']
         for k in question.keys():
             if k.lower().endswith('userid'):
                 # use the same field name, minus the 'Id' on the end.
-                question[k[:-2]] = users_by_site[site_name].get(question[k])
+                question[k[:-2]] = users_by_site[site_key].get(question[k])
             
         comments = question.get('comments')
         if not ignore_comments and comments:
@@ -449,9 +400,7 @@ def retrieve_users(results, question_only=False, ignore_comments=False):
                 for ck in c.keys():
                     if ck.lower().endswith('userid'):
                         # use the same field name, minus the 'Id' on the end.
-                        c[ck[:-2]] = users_by_site[site_name].get(c[ck])
-            
-            
+                        c[ck[:-2]] = users_by_site[site_key].get(c[ck])
         
         # the answers
         answers = r.get('answers')
@@ -460,7 +409,7 @@ def retrieve_users(results, question_only=False, ignore_comments=False):
                 for k in a.keys():
                     if k.lower().endswith('userid'):
                         # use the same field name, minus the 'Id' on the end.
-                        a[k[:-2]] = users_by_site[site_name].get(a[k])
+                        a[k[:-2]] = users_by_site[site_key].get(a[k])
                 
                 comments = a.get('comments')
                 if not ignore_comments and comments:
@@ -468,7 +417,84 @@ def retrieve_users(results, question_only=False, ignore_comments=False):
                         for ck in c.keys():
                             if ck.lower().endswith('userid'):
                                 # use the same field name, minus the 'Id' on the end.
-                                c[ck[:-2]] = users_by_site[site_name].get(c[ck])
+                                c[ck[:-2]] = users_by_site[site_key].get(c[ck])
+
+def retrieve_sites(results):
+    '''\
+    Retrieves the site objects associated with the results.
+    '''
+    # get a list of all the site keys
+    site_keys = set()
+    for r in results:
+        site_keys.add(r['siteKey'])
+    
+    # retrieve the site objects from the database
+    sites = { }
+    for site_key in site_keys:
+        sites[site_key] = Site.select(Site.q.key == site_key).getOne()
+    
+    # place site objects into the dict
+    for r in results:
+        site_key = r['siteKey']
+        r['site'] = sites[site_key]
+
+def perform_search(site_key=None):
+    '''\
+    Common code for performing a search and returning the context for template
+    rendering.
+    
+    If a site_key was provided, the search will be limited to that particular
+    site.
+    '''
+    # TODO: scrub this first to avoid Solr injection attacks?
+    query = request.GET.get('q')
+    if not query:
+        redirect(settings.APP_URL_ROOT)
+    # this query string contains any special bits we add that we don't want
+    # the user to see.
+    int_query = query
+    if site_key:
+        int_query += ' AND siteKey:%s' % site_key
+    
+    # the page GET parameter is zero-based
+    page = int(request.GET.get('p', 0))
+    if page < 0: page = 0
+    
+    rows_per_page = int(request.GET.get('r', 10))
+    rows_per_page = (rows_per_page > 0) and rows_per_page or 10
+    
+    sort_args = {
+        'newest' : 'creationDate desc',
+        'votes' : 'votes desc',
+        'relevance' : 'score desc' # score is the special keyword for the
+                                   # relevancy score in Lucene
+    }
+    sort_by = request.GET.get('s', 'relevance').lower()
+    # default to sorting by relevance
+    if sort_by not in sort_args.keys():
+        sort_by = 'relevance'
+    
+    # perform search
+    results = solr_conn().search(int_query,
+                                 start=page*rows_per_page,
+                                 rows=rows_per_page,
+                                 sort=sort_args[sort_by])
+    decode_json_fields(results)
+    retrieve_users(results, question_only=True, ignore_comments=True)
+    retrieve_sites(results)
+    
+    context = { }
+    
+    # TODO: scrub this first to avoid HTML injection attacks?
+    context['query'] = query
+    context['results'] = results
+    context['total_hits'] = results.hits
+    context['current_page'] = page + 1 # page template var is ones-based
+    context['rows_per_page'] = rows_per_page
+    context['total_pages'] =  int(math.ceil(float(results.hits) / rows_per_page))
+    context['sort_by'] = sort_by
+    
+    return context
 
 # END VIEW HELPERS
 

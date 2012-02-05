@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Stackdump search for "{{ query }}"{% endblock %}
+{% block title %}Stackdump // {{ site.name }} search for "{{ query }}"{% endblock %}
 
 {% block body %}
     <div class="row">
@@ -8,7 +8,7 @@
             <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}search">
                 <input type="text" class="xlarge" name="q" value="{{ query }}" />
                 <input type="hidden" name="s" value="{{ sort_by }}" />
-                <input type="submit" class="btn primary" value="Search" />
+                <input type="submit" class="btn primary" value="Search{% if site %} {{ site.name }}{% endif %}" />
             </form>
             
             <ul class="tabs">
@@ -33,9 +33,11 @@
             </div>
             
             <div class="well site-list-container">
-                <h3>Narrow by site</h3>
+                <h3>Search other sites</h3>
                 <ul class="site-list">
                     {% for s in sites %}
+                    {# don't show the current site #}
+                    {% if s.key != site.key %}
                     <li>
                         <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ s.key }}.png" alt="{{ s.name }} logo" />
                         <h6>
@@ -43,8 +45,13 @@
                             <small class="tagline">{{ s.dump_date }}</small>
                         </h6>
                     </li>
+                    {% endif %}
                     {% endfor %}
                 </ul>
+            </div>
+            
+            <div class="well">
+                <a href="{{ SETTINGS.APP_URL_ROOT }}search?q={{ query }}&amp;s={{ sort_by }}">Search across all sites.</a>
             </div>
         </div>
     </div>

@@ -105,18 +105,27 @@
 
 #search-results li {
     clear: both;
-    border-top: 1px solid #CCCCCC;
+    border-bottom: 1px solid #CCCCCC;
     margin-bottom: 10px;
     padding-right: 10px;
 }
 
 #search-results li:hover {
-    background-color: #F2F2F2;
+    background-color: #FAFAFA;
 }
 
 #search-results li .clearfix {
     clear: both;
     height: 0;
+}
+
+#search-results li:last-child {
+    border-bottom: none;
+}
+
+.post-logo {
+    float: left;
+    width: 48px;
 }
 
 .post-stats-vertical {
@@ -147,6 +156,10 @@
 
 .post-summary {
     padding-left: 72px; /* 64px for post-stats-vertical + 8px for padding */
+}
+
+.post-summary-with-logo {
+    padding-left: 120px; /* 48px for post-logo + 64px for post-stats-vertical + 8px for padding */
 }
 
 .post-summary h3 {
