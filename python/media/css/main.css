@@ -7,6 +7,10 @@ html, body {
     height: 100%;
 }
 
+pre code {
+    background-color: transparent;
+}
+
 /* don't want it to have a fixed position; so we'll override it */
 .topbar {
     position: absolute;
@@ -186,6 +190,117 @@ html, body {
 
 .post-details {
     float: right;
+}
+
+.question h1 {
+    border-bottom: 1px solid #CCCCCC;
+    padding-bottom: 7px;
+    margin-top: 15px;
+}
+
+.post-body, .post-metadata, .post-comments {
+    margin-left: 72px; /* 64px for post-stats-vertical + 8px for padding */
+}
+
+.post-metadata {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #CCCCCC;
+}
+
+.post-user {
+    float: right;
+    margin-left: 50px;
+    color: #333333;
+}
+
+.post-comments {
+    clear: both;
+}
+
+.post-comments ul {
+    list-style: none;
+    margin-left: 0;
+}
+
+.post-comments li {
+    border-bottom: 1px solid #E3E3E3;
+    padding: 7px 4px 7px 0;
+    color: #333333;
+}
+
+.post-comments li:last-child {
+    border-bottom: none;
+}
+
+li .post-comment-score {
+    float: left;
+    font-weight: bold;
+    color: #000000;
+    width: 40px;
+    text-align: center;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+li .post-comment-text {
+    margin-left: 40px;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+li .post-comment-metadata {
+    color: #999999;
+}
+
+.user-card {
+    background-color: #F2F2F2;
+}
+
+.user-card .user-name {
+    padding: 4px 7px;
+}
+
+.user-card .user-rep {
+    float: right;
+    font-weight: bold;
+    font-size: 15px;
+    background-color: #CCCCCC;
+    padding: 4px 7px;
+}
+
+div.answers {
+    margin-top: 30px;
+}
+
+ul.answers {
+    list-style: none;
+    margin-left: 0;
+}
+
+ul.answers > li {
+    padding-bottom: 30px;
+    border-bottom: 1px solid #999999;
+    margin-top: 30px;
+}
+
+ul.answers > li:last-child {
+    border-bottom: none;
+}
+
+h1.answers {
+    margin-bottom: 7px;
+    line-height: normal;
+    border-bottom: 1px solid #999999;
+    padding-bottom: 7px;
+}
+
+.no-answers {
+    font-size: 24pt;
+    color: #CCCCCC;
+    text-align: center;
+    padding-bottom: 120px;
+    padding-top: 90px;
 }
 
 #footer, #footer-push {

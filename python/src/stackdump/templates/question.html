@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Stackdump // {{ site.name }} // {{ result.question.title }}{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="{{ SETTINGS.APP_URL_ROOT }}media/js/google-code-prettify/prettify.css" type="text/css" />
+<script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/google-code-prettify/prettify.js"></script>
+{% endblock %}
+
+{% block body %}
+    {% set r = result %}
+    <div class="row">
+        <div class="span16">
+            <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}{{ site.key }}/search">
+                <input type="text" class="xlarge" name="q" value="{{ query }}" />
+                <input type="hidden" name="s" value="{{ sort_by }}" />
+                <input type="submit" class="btn primary" value="Search{% if site %} {{ site.name }}{% endif %}" />
+            </form>
+        </div>
+    </div>
+    <div class="row question">
+        <div class="span16">
+            <h1>{{ r.question.title }}</h1>
+            <div class="post-stats-vertical">
+                <div class="post-stat">
+                    <p class="post-stat-value {% if r.question.score < 0 %}post-stat-value-poor{% endif %}">
+                        {{ r.question.score }}
+                    </p>
+                    <p>vote{% if r.question.score != 1 %}s{% endif %}</p>
+                </div>
+                <div class="post-stat">
+                    <p class="post-stat-value {% if r.answers|length == 0 %}post-stat-value-poor{% endif %}">
+                        {{ r.answers|length }}
+                    </p>
+                    <p>answer{% if r.answers|length != 1 %}s{% endif %}</p>
+                </div>
+            </div>
+            <div class="post-body">
+                {{ r.question.body|safe }}
+            </div>
+            <div class="post-metadata">
+                <div class="post-user">
+                    <p>asked on <strong>{{ r.question.creationDate|format_datetime }}</strong></p>
+                    <div class="user-card">
+                        <p class="user-rep">{{ r.question.ownerUser.reputation }}</p>
+                        <p class="user-name">{{ r.question.ownerUser.displayName }}</p>
+                    </div>
+                </div>
+                
+                {% if r.question.lastEditorUser %}
+                <div class="post-user">
+                    <p>last edited <strong>{{ r.question.lastActivityDate|format_datetime }}</strong></p>
+                    <div class="user-card">
+                        <p class="user-rep">{{ r.question.lastEditorUser.reputation }}</p>
+                        <p class="user-name">{{ r.question.lastEditorUser.displayName }}</p>
+                        
+                    </div>
+                </div>
+                {% endif %}
+                <div class="post-tags">
+                    {% for t in r.question.tags %}
+                    <span class="label">{{ t }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if r.question.comments %}
+            <div class="post-comments">
+                <ul>
+                    {% for c in r.question.comments %}
+                    <li>
+                        {% if c.score > 0 %}
+                        <p class="post-comment-score">{{ c.score }}</p>
+                        {% endif %}
+                        <p class="post-comment-text">
+                            {{ c.text }} &mdash;
+                            <span class="post-comment-metadata">
+                                <strong>{{ c.user.displayName }}</strong> on
+                                <strong>{{ c.creationDate|format_datetime }}</strong>
+                            </span>
+                        </p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row answers">
+        <div class="span16">
+            {% if r.answers|length > 0 %}
+            <h1 class="answers">{{ r.answers|length }} answer{% if r.answers|length != 1 %}s{% endif %}</h1>
+            <ul class="answers">
+                {% for a in r.answers %}
+                <li>
+                    <div class="post-stats-vertical">
+                        <div class="post-stat">
+                            <p class="post-stat-value {% if a.score < 0 %}post-stat-value-poor{% endif %}">
+                                {{ a.score }}
+                            </p>
+                            <p>vote{% if a.score != 1 %}s{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="post-body">
+                        {{ a.body|safe }}
+                    </div>
+                    <div class="post-metadata">
+                        <div class="post-user">
+                            <p>answered on <strong>{{ a.creationDate|format_datetime }}</strong></p>
+                            <div class="user-card">
+                                <p class="user-rep">{{ a.ownerUser.reputation }}</p>
+                                <p class="user-name">{{ a.ownerUser.displayName }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if a.lastEditorUser %}
+                        <div class="post-user">
+                            <p>last edited <strong>{{ a.lastEditDate|format_datetime }}</strong></p>
+                            <div class="user-card">
+                                <p class="user-rep">{{ a.lastEditorUser.reputation }}</p>
+                                <p class="user-name">{{ a.lastEditorUser.displayName }}</p>
+                                
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="post-tags">
+                            {% for t in a.tags %}
+                            <span class="label">{{ t }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="post-comments">
+                        {% if a.comments %}
+                        <ul>
+                            {% for c in a.comments %}
+                            <li>
+                                {% if c.score > 0 %}
+                                <p class="post-comment-score">{{ c.score }}</p>
+                                {% endif %}
+                                <p class="post-comment-text">
+                                    {{ c.text }} &mdash;
+                                    <span class="post-comment-metadata">
+                                        <strong>{{ c.user.displayName }}</strong> on
+                                        <strong>{{ c.creationDate|format_datetime }}</strong>
+                                    </span>
+                                </p>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %} 
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-answers">There are no answers for this question :(</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        // enable pretty printing. This uses the google-code-prettify library.
+        // That library requires code blocks to be annotated with the
+        // 'prettyprint' CSS class for it to prettify it.
+        //
+        // All of StackExchange's code blocks (i.e. not code keywords, but
+        // actual blocks of code) are enclosed inside pre tags.
+        $(document).ready(function() {
+            $('pre code').each(function(index, value) { $(value).addClass('prettyprint');});
+            prettyPrint();
+        });
+    </script>
+{% endblock %}

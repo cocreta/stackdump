@@ -27,7 +27,7 @@
             </div>
         </div>
         <div class="post-summary {% if not site %}post-summary-with-logo{% endif %}">
-            <h3><a href="#">{{ r.question.title }}</a></h3>
+            <h3><a href="{{ SETTINGS.APP_URL_ROOT }}{{ r.site.key }}/{{ r.id }}">{{ r.question.title }}</a></h3>
             <p>{{ r.question.body|striptags|truncate(256) }}</p>
             <p class="post-details">
                 Asked by <strong>{{ r.question.ownerUser.displayName }}</strong> on

@@ -31,7 +31,7 @@ thread_locals = threading.local()
 
 # CUSTOM TEMPLATE TAGS AND FILTERS
 
-def format_datetime(value):
+def format_datetime(value, format_string=None):
     '''\
     Formats a datetime to something nice. If a string is given, an attempt will
     be made at parsing it.
@@ -43,7 +43,9 @@ def format_datetime(value):
             # couldn't parse it, so just return what we were given
             return value
     
-    return value.strftime('%d %b %Y %I:%M %p')
+    format_string = format_string or '%d %b %Y %I:%M %p'
+    
+    return value.strftime(format_string)
 
 def set_get_parameters(base_url, *new_parameters):
     '''\
@@ -244,6 +246,33 @@ def site_search(site_key):
     context.update(perform_search(site_key))
     
     return render_template('site_results.html', context)
+
+@route('/:site_key#[\w\.]+#/:question_id#\d+#')
+@uses_templates
+@uses_solr
+@uses_db
+def view_question(site_key, question_id):
+    context = { }
+    context['site_root_path'] = '%s/' % site_key
+    
+    try:
+        context['site'] = Site.selectBy(key=site_key).getOne()
+    except SQLObjectNotFound:
+        raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
+    
+    # get the question referenced by this question id
+    query = 'id:%s AND siteKey:%s' % (question_id, site_key)
+    results = solr_conn().search(query)
+    if len(results) == 0:
+        raise HTTPError(code=404, output='No question exists with the id %s.' % question_id)
+    
+    decode_json_fields(results)
+    retrieve_users(results)
+    retrieve_sites(results)
+    
+    context['result'] = results.docs[0]
+    
+    return render_template('question.html', context)
 
 # END WEB REQUEST METHODS
 
