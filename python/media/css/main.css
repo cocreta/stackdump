@@ -41,6 +41,7 @@ html, body {
 /* leave enough gap for the topbar */
 #content {
     padding-top: 40px;
+    padding-bottom: 40px;
 }
 
 .search-container {
