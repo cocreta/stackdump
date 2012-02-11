@@ -1,3 +1,9 @@
+{% if results|length == 0 %}
+<p><em>No questions or answers found for your query.</em></p>
+{% if site %}
+<p>Try searching in another StackExchange website by using the links on the right.</p>
+{% endif %}
+{% else %}
 <ul id="search-results">
     {% for r in results %}
     <li>
@@ -57,3 +63,4 @@
     {% endif %}
     </ul>
 </div>
+{% endif %}
