@@ -1,3 +1,12 @@
+/* http://ryanfait.com/resources/footer-stick-to-bottom-of-page/ */
+* {
+    margin: 0;
+}
+
+html, body {
+    height: 100%;
+}
+
 /* don't want it to have a fixed position; so we'll override it */
 .topbar {
     position: absolute;
@@ -22,9 +31,16 @@
     padding-right: 3px;
 }
 
+#wrapper {
+    min-height: 100%;
+    height: auto !important;
+    height: 100%;
+    margin: 0 auto -35px;
+}
+
 /* leave enough gap for the topbar */
 #content {
-    margin-top: 40px;
+    padding-top: 40px;
 }
 
 .search-container {
@@ -171,8 +187,12 @@
     float: right;
 }
 
+#footer, #footer-push {
+    height: 20px;
+}
+
 #footer {
-    margin-top: 50px;
+    clear: both;
     border-top: solid 1px #999999;
     background-color: #CCCCCC;
     padding: 7px 10px;
