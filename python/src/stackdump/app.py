@@ -12,7 +12,7 @@ except ImportError:
     # For Python >= 2.6
     import json
 
-from bottle import route, run, static_file, debug, request, redirect, HTTPError
+from bottle import get, run, static_file, debug, request, HTTPError
 from jinja2 import Environment, PackageLoader
 from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound 
 from pysolr import Solr
@@ -175,7 +175,7 @@ def uses_db(fn):
 # this method MUST sit above the generic static media server, otherwise it won't
 # be hit and you will get 'file not found' errors when looking for a
 # non-existent logo.
-@route('/media/logos/:site_key#[\w\.]+#.png')
+@get('/media/logos/:site_key#[\w\.]+#.png')
 def site_logos(site_key):
     root = os.path.join(MEDIA_ROOT, 'images/logos')
     filename = '%s.png' % site_key
@@ -186,11 +186,11 @@ def site_logos(site_key):
         return static_file('images/unknown_site_logo.png', root=MEDIA_ROOT)
 
 # Bottle will protect us against nefarious peeps using ../ hacks.
-@route('/media/:filename#.*#')
+@get('/media/:filename#.*#')
 def serve_static(filename):
     return static_file(filename, root=MEDIA_ROOT)
 
-@route('/')
+@get('/')
 @uses_templates
 @uses_db
 def index():
@@ -199,8 +199,8 @@ def index():
     context['sites'] = Site.select()
     return render_template('index.html', context)
 
-@route('/:site_key#[\w\.]+#')
-@route('/:site_key#[\w\.]+#/')
+@get('/:site_key#[\w\.]+#')
+@get('/:site_key#[\w\.]+#/')
 @uses_templates
 @uses_db
 def site_index(site_key):
@@ -214,7 +214,7 @@ def site_index(site_key):
     
     return render_template('site_index.html', context)
 
-@route('/search')
+@get('/search')
 @uses_templates
 @uses_solr
 @uses_db
@@ -231,7 +231,7 @@ def search():
     
     return render_template('results.html', context)
 
-@route('/:site_key#[\w\.]+#/search')
+@get('/:site_key#[\w\.]+#/search')
 @uses_templates
 @uses_solr
 @uses_db
@@ -255,7 +255,7 @@ def site_search(site_key):
     
     return render_template('site_results.html', context)
 
-@route('/:site_key#[\w\.]+#/:question_id#\d+#')
+@get('/:site_key#[\w\.]+#/:question_id#\d+#')
 @uses_templates
 @uses_solr
 @uses_db
