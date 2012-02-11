@@ -211,7 +211,7 @@ pre code {
 .post-user {
     float: right;
     margin-left: 50px;
-    color: #333333;
+    color: #404040;
 }
 
 .post-comments {
@@ -226,7 +226,7 @@ pre code {
 .post-comments li {
     border-bottom: 1px solid #E3E3E3;
     padding: 7px 4px 7px 0;
-    color: #333333;
+    color: #404040;
 }
 
 .post-comments li:last-child {
@@ -282,6 +282,7 @@ ul.answers > li {
     padding-bottom: 30px;
     border-bottom: 1px solid #999999;
     margin-top: 30px;
+    color: #404040;
 }
 
 ul.answers > li:last-child {
