@@ -453,6 +453,8 @@ def perform_search(site_key=None):
     # this query string contains any special bits we add that we don't want
     # the user to see.
     int_query = query
+    # force keywords to default to being ANDed, instead of ORed.
+    int_query = '{!lucene q.op=AND}' + query
     if site_key:
         int_query += ' AND siteKey:%s' % site_key
     
