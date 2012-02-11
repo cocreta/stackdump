@@ -12,7 +12,7 @@ except ImportError:
     # For Python >= 2.6
     import json
 
-from bottle import route, run, static_file, debug, abort, request, redirect
+from bottle import route, run, static_file, debug, request, redirect, HTTPError
 from jinja2 import Environment, PackageLoader
 from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound 
 from pysolr import Solr
@@ -210,7 +210,7 @@ def site_index(site_key):
     try:
         context['site'] = Site.selectBy(key=site_key).getOne()
     except SQLObjectNotFound:
-        abort(code=404, output='No site exists with the key %s.' % site_key)
+        raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
     
     return render_template('site_index.html', context)
 
@@ -223,7 +223,11 @@ def search():
     context['site_root_path'] = ''
     context['sites'] = Site.select()
     
-    context.update(perform_search())
+    search_context = perform_search()
+    if not search_context:
+        raise HTTPError(code=500, output='Invalid query attempted.')
+    
+    context.update(search_context)
     
     return render_template('results.html', context)
 
@@ -243,7 +247,11 @@ def site_search(site_key):
         raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
     
     # perform the search limited by this site
-    context.update(perform_search(site_key))
+    search_context = perform_search(site_key)
+    if not search_context:
+        raise HTTPError(code=500, output='Invalid query attempted.')
+    
+    context.update(search_context)
     
     return render_template('site_results.html', context)
 
@@ -478,7 +486,7 @@ def perform_search(site_key=None):
     # TODO: scrub this first to avoid Solr injection attacks?
     query = request.GET.get('q')
     if not query:
-        redirect(settings.APP_URL_ROOT)
+        return None
     # this query string contains any special bits we add that we don't want
     # the user to see.
     int_query = query

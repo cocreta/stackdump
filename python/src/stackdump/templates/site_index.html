@@ -11,7 +11,7 @@
                     {{ site.name }}
                     <small class="tagline">{{ site.desc }}</small>
                 </h1>
-                <form id="search" method="post" action="{{ SETTINGS.APP_URL_ROOT }}{{ site_root_path }}search">
+                <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}{{ site_root_path }}search">
                     <input type="text" class="xlarge" name="q" />
                     <input type="submit" class="btn primary" value="Search" />
                 </form>
