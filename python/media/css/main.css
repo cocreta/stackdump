@@ -192,6 +192,10 @@ pre code {
     float: right;
 }
 
+.post-tags {
+    margin-bottom: 10px;
+}
+
 .question h1 {
     border-bottom: 1px solid #CCCCCC;
     padding-bottom: 7px;

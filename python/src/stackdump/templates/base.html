@@ -17,13 +17,13 @@
                     <a href="{{ SETTINGS.APP_URL_ROOT }}">Stackdump</a>
                     {% if site %}
                     <span class="topbar-divider">//</span>
-                    <a href="{{ SETTINGS.APP_URL_ROOT }}{{ site_root_path }}">{{ site.name }}</a>
+                    <a href="{{ SETTINGS.APP_URL_ROOT }}{{ site.key }}">{{ site.name }}</a>
                     from {{ site.dump_date }}
                     {% endif %}
                 </span>
                 
                 
-                <form method="get" action="{{ SETTINGS.APP_URL_ROOT }}{{ site_root_path }}search" class="pull-right"> 
+                <form method="get" action="{{ SETTINGS.APP_URL_ROOT }}{% if site %}{{ site.key }}/{% endif %}search" class="pull-right"> 
                     <input type="text" placeholder="Search {% if site %}{{ site.name }}{% endif %}" />
                 </form> 
             </div> 

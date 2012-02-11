@@ -44,6 +44,7 @@
     </li>
     {% endfor %}
 </ul>
+{% if total_pages and total_pages > 1 %}
 <div class="pagination">
     <ul>
         {% if current_page > 1 %}
@@ -63,4 +64,5 @@
     {% endif %}
     </ul>
 </div>
+{% endif %}
 {% endif %}

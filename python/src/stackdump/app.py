@@ -4,6 +4,7 @@ import threading
 import functools
 import re
 import math
+import random
 
 try:
     # For Python < 2.6 or people using a newer version of simplejson
@@ -192,27 +193,33 @@ def serve_static(filename):
 
 @get('/')
 @uses_templates
+@uses_solr
 @uses_db
 def index():
     context = { }
-    context['site_root_path'] = ''
     context['sites'] = Site.select()
+    
+    context['random_questions'] = get_random_questions()
+    
     return render_template('index.html', context)
 
 @get('/:site_key#[\w\.]+#')
 @get('/:site_key#[\w\.]+#/')
 @uses_templates
+@uses_solr
 @uses_db
 def site_index(site_key):
     context = { }
-    context['site_root_path'] = '%s/' % site_key
+    context['sites'] = Site.select()
     
     try:
         context['site'] = Site.selectBy(key=site_key).getOne()
     except SQLObjectNotFound:
         raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
     
-    return render_template('site_index.html', context)
+    context['random_questions'] = get_random_questions(site_key=site_key)    
+    
+    return render_template('index.html', context)
 
 @get('/search')
 @uses_templates
@@ -220,7 +227,6 @@ def site_index(site_key):
 @uses_db
 def search():
     context = { }
-    context['site_root_path'] = ''
     context['sites'] = Site.select()
     
     search_context = perform_search()
@@ -237,7 +243,6 @@ def search():
 @uses_db
 def site_search(site_key):
     context = { }
-    context['site_root_path'] = '%s/' % site_key
     # the template uses this to allow searching on other sites
     context['sites'] = Site.select()
     
@@ -261,7 +266,6 @@ def site_search(site_key):
 @uses_db
 def view_question(site_key, question_id):
     context = { }
-    context['site_root_path'] = '%s/' % site_key
     
     try:
         context['site'] = Site.selectBy(key=site_key).getOne()
@@ -532,6 +536,19 @@ def perform_search(site_key=None):
     context['sort_by'] = sort_by
     
     return context
+
+def get_random_questions(site_key=None, count=3):
+    random_field_name = 'random_%d %s' % (random.randint(1000, 9999), random.choice(['asc', 'desc']))
+    query = '*:*'
+    if site_key:
+        query = ' siteKey:%s' % site_key
+        
+    results = solr_conn().search(query, rows=count, sort=random_field_name)
+    decode_json_fields(results)
+    retrieve_users(results, question_only=True, ignore_comments=True)
+    retrieve_sites(results)
+    
+    return results
 
 # END VIEW HELPERS
 
