@@ -32,6 +32,8 @@
                 </p>
             </div>
             
+            {# don't bother showing if we're the only site. #}
+            {% if sites|list|length > 1 %}
             <div class="well site-list-container">
                 <h3>Search other sites</h3>
                 <ul class="site-list">
@@ -51,6 +53,7 @@
                 <h3>or...</h3>
                 <a href="{{ SETTINGS.APP_URL_ROOT }}search?q={{ query }}&amp;s={{ sort_by }}">search across all sites.</a>
             </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

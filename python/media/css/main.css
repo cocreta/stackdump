@@ -157,8 +157,8 @@ pre code {
 .post-stat {
     text-align: center;
     background-color: #F2F2F2;
-    margin-bottom: 2px;
-    padding: 4px 3px;
+    margin-bottom: 5px;
+    padding: 10px 5px;
 }
 
 .post-stat p {
@@ -249,7 +249,7 @@ li .post-comment-score {
 
 li .post-comment-text {
     margin-left: 40px;
-    line-height: normal;
+    line-height: 20px;
     margin-bottom: 0;
 }
 

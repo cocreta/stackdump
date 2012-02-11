@@ -1,6 +1,6 @@
 {% if results|length == 0 %}
 <p><em>No questions or answers found for your query.</em></p>
-{% if site %}
+{% if site and sites|list|length > 1 %}
 <p>Try searching in another StackExchange website by using the links on the right.</p>
 {% endif %}
 {% else %}
