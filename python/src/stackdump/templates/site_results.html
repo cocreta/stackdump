@@ -5,7 +5,7 @@
 {% block body %}
     <div class="row">
         <div class="span16">
-            <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}search">
+            <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}{{ site.key }}/search">
                 <input type="text" class="xlarge" name="q" value="{{ query }}" />
                 <input type="hidden" name="s" value="{{ sort_by }}" />
                 <input type="submit" class="btn primary" value="Search{% if site %} {{ site.name }}{% endif %}" />
