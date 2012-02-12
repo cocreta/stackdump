@@ -9,7 +9,7 @@
     <li>
         {% if not site %}
         <div class="post-logo">
-            <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ r.site.key }}.png" alt="{{ r.site.name }} logo" />
+            <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ r.site.key }}.png" alt="{{ r.site.name }} logo" title="{{ r.site.name }} logo" />
         </div>
         {% endif %}
         <div class="post-stats-vertical">
