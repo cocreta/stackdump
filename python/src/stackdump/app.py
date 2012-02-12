@@ -306,7 +306,9 @@ def view_question(site_key, question_id):
     retrieve_users(results)
     retrieve_sites(results)
     
-    context['result'] = results.docs[0]
+    result = results.docs[0]
+    sort_answers(result)
+    context['result'] = result
     
     return render_template('question.html', context)
 
@@ -600,6 +602,27 @@ def get_random_questions(site_key=None, count=3):
     retrieve_sites(results)
     
     return results
+
+def sort_answers(result):
+    '''\
+    Sorts the answers in the given result such that the accepted answer (if one)
+    is sorted first, and all others are sorted by their votes.
+    '''
+    answers = result.get('answers')
+    if not answers:
+        return
+    
+    accepted_answer_id = result['question'].get('acceptedAnswerId', None)
+    
+    def comparison_function(a, b):
+        if a['id'] == accepted_answer_id:
+            return 1
+        elif b['id'] == accepted_answer_id:
+            return -1
+        
+        return cmp(a.get('score'), b.get('score'))
+    
+    answers.sort(comparison_function, reverse=True)
 
 # END VIEW HELPERS
 

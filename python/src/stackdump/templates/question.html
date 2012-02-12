@@ -100,6 +100,13 @@
                             </p>
                             <p>vote{% if a.score != 1 %}s{% endif %}</p>
                         </div>
+                        {% if r.question.acceptedAnswerId %}
+                        {% if r.question.acceptedAnswerId == a.id %}
+                        <div class="post-stat post-stat-img">
+                            <img src="{{ SETTINGS.APP_URL_ROOT }}media/images/accepted_answer.png" alt="Accepted answer" />
+                        </div>
+                        {% endif %}
+                        {% endif %}
                     </div>
                     <div class="post-body">
                         {{ a.body|safe }}

@@ -162,6 +162,10 @@ pre code {
     padding: 10px 5px;
 }
 
+.post-stat-img {
+    background-color: transparent;
+}
+
 .post-stat p {
     margin-bottom: 0;
 }
@@ -174,6 +178,10 @@ pre code {
 
 .post-stat-value-poor {
     color: #AAAAAA;
+}
+
+.post-stat-value-good {
+    color: #5ebb00;
 }
 
 .post-summary {
@@ -220,7 +228,7 @@ pre code {
 }
 
 .post-comments {
-    clear: both;
+    clear: right;
 }
 
 .post-comments ul {

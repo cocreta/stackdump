@@ -20,8 +20,12 @@
                 <p>vote{% if r.question.score != 1 %}s{% endif %}</p>
             </div>
             <div class="post-stat">
-                <p class="post-stat-value {% if r.answers|length == 0 %}post-stat-value-poor{% endif %}">
+                <p class="post-stat-value {% if r.answers|length == 0 %}post-stat-value-poor{% endif %} {% if r.question.acceptedAnswerId %}post-stat-value-good{% endif %}">
+                    {% if r.question.acceptedAnswerId %}
+                    <span title="One of the answers has been accepted as the correct answer.">{{ r.answers|length }}</span>
+                    {% else %}
                     {{ r.answers|length }}
+                    {% endif %}
                 </p>
                 <p>answer{% if r.answers|length != 1 %}s{% endif %}</p>
             </div>
