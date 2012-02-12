@@ -631,7 +631,7 @@ if not (site_name and site_key and site_desc and dump_date):
 
 # prevent importing sites with keys that clash with method names in the app,
 # e.g. a site key of 'search' would clash with the Stackdump-wide search page.
-if site_key in ('search', 'import', 'media'):
+if site_key in ('search', 'import', 'media', 'licenses'):
     print 'The site key given, %s, is a reserved word in Stackdump.' % site_key
     print 'Use the --site-key parameter to specify an alternate site key.'
     sys.exit(2)

@@ -246,6 +246,28 @@ def search():
     
     return render_template('results.html', context)
 
+# this method MUST sit above the site_index and other methods below so it
+# cannot be subverted by a site with a site key of 'licenses'.
+@get('/licenses/mit')
+@get('/licenses/mit/')
+@uses_templates
+def mit_license():
+    '''\
+    Renders the 'mit license' page.
+    '''
+    return render_template('mit_license.html')
+
+# this method MUST sit above the site_index and other methods below so it
+# cannot be subverted by a site with a site key of 'licenses'.
+@get('/licenses/cc-wiki')
+@get('/licenses/cc-wiki/')
+@uses_templates
+def cc_wiki_license():
+    '''\
+    Renders the 'cc-wiki license' page.
+    '''
+    return render_template('cc-wiki_license.html')
+
 @get('/:site_key#[\w\.]+#')
 @get('/:site_key#[\w\.]+#/')
 @uses_templates
