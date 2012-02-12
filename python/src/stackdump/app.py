@@ -225,6 +225,24 @@ def import_data():
     '''
     return render_template('import_data.html')
 
+# this method MUST sit above the site_index and other methods below so it
+# cannot be subverted by a site with a site key of 'search'.
+@get('/search')
+@uses_templates
+@uses_solr
+@uses_db
+def search():
+    context = { }
+    context['sites'] = get_sites()
+    
+    search_context = perform_search()
+    if not search_context:
+        raise HTTPError(code=500, output='Invalid query attempted.')
+    
+    context.update(search_context)
+    
+    return render_template('results.html', context)
+
 @get('/:site_key#[\w\.]+#')
 @get('/:site_key#[\w\.]+#/')
 @uses_templates
@@ -242,22 +260,6 @@ def site_index(site_key):
     context['random_questions'] = get_random_questions(site_key=site_key)    
     
     return render_template('index.html', context)
-
-@get('/search')
-@uses_templates
-@uses_solr
-@uses_db
-def search():
-    context = { }
-    context['sites'] = get_sites()
-    
-    search_context = perform_search()
-    if not search_context:
-        raise HTTPError(code=500, output='Invalid query attempted.')
-    
-    context.update(search_context)
-    
-    return render_template('results.html', context)
 
 @get('/:site_key#[\w\.]+#/search')
 @uses_templates
