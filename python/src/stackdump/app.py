@@ -195,6 +195,14 @@ def site_logos(site_key):
 def serve_static(filename):
     return static_file(filename, root=MEDIA_ROOT)
 
+@error(404)
+@uses_templates
+def error404(error):
+    context = { }
+    context['error'] = error
+    
+    return render_template('404.html', context)
+
 @error(500)
 @uses_templates
 def error500(error):
@@ -325,7 +333,7 @@ def view_question(site_key, question_id):
     query = 'id:%s siteKey:%s' % (question_id, site_key)
     results = solr_conn().search(query)
     if len(results) == 0:
-        raise HTTPError(code=404, output='No question exists with the id %s.' % question_id)
+        raise HTTPError(code=404, output='No question exists with the ID %s for the site, %s.' % (question_id, context['site'].name))
     
     decode_json_fields(results)
     retrieve_users(results)
