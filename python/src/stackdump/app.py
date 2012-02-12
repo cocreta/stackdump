@@ -214,6 +214,17 @@ def index():
     
     return render_template('index.html', context)
 
+# this method MUST sit above the site_index and other methods below so it
+# cannot be subverted by a site with a site key of 'import'.
+@get('/import')
+@get('/import/')
+@uses_templates
+def import_data():
+    '''\
+    Renders the 'how to import data' page.
+    '''
+    return render_template('import_data.html')
+
 @get('/:site_key#[\w\.]+#')
 @get('/:site_key#[\w\.]+#/')
 @uses_templates
