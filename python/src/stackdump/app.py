@@ -523,9 +523,12 @@ def retrieve_sites(results):
         site_keys.add(r['siteKey'])
     
     # retrieve the site objects from the database
+    site_objects = Site.select(IN(Site.q.key, list(site_keys)))
+    
+    # convert results into a dict with site key as the key
     sites = { }
-    for site_key in site_keys:
-        sites[site_key] = Site.select(Site.q.key == site_key).getOne()
+    for s in site_objects:
+        sites[s.key] = s
     
     # place site objects into the dict
     for r in results:
