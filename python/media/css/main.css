@@ -215,6 +215,11 @@ pre code {
     margin-left: 72px; /* 64px for post-stats-vertical + 8px for padding */
 }
 
+/* undo the zero margin-bottom imposed by bootstrap */
+.post-body ul, .post-body ol {
+    margin-bottom: 7px;
+}
+
 .post-metadata {
     margin-top: 10px;
     padding-top: 10px;
