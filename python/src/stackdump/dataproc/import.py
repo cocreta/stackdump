@@ -620,6 +620,13 @@ if not (site_name and site_key and site_desc and dump_date):
     print 'Use command-line parameters to specify the missing details (listed as None).'
     sys.exit(1)
 
+# prevent importing sites with keys that clash with method names in the app,
+# e.g. a site key of 'search' would clash with the Stackdump-wide search page.
+if site_key in ('search', 'import', 'media'):
+    print 'The site key given, %s, is a reserved word in Stackdump.' % site_key
+    print 'Use the --site-key parameter to specify an alternate site key.'
+    sys.exit(2)
+
 # check if site is already in database; if so, purge the data.
 site = list(Site.select(Site.q.key==site_key))
 if len(site) > 0:
