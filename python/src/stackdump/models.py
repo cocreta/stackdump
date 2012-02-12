@@ -2,7 +2,8 @@
 
 # This file contains all the model definitions for the database.
 
-from sqlobject import *
+from sqlobject import SQLObject, UnicodeCol, DateTimeCol, IntCol, ForeignKey, \
+                      DatabaseIndex
 
 class Site(SQLObject):
     name = UnicodeCol()
@@ -10,6 +11,8 @@ class Site(SQLObject):
     key = UnicodeCol()
     dump_date = UnicodeCol()
     import_date = DateTimeCol()
+    
+    siteKey_index = DatabaseIndex(key, unique=True)
 
 class Badge(SQLObject):
     sourceId = IntCol()
@@ -26,6 +29,8 @@ class Comment(SQLObject):
     text = UnicodeCol()
     creationDate = DateTimeCol()
     userId = IntCol()
+    
+    siteId_postId_index = DatabaseIndex(site, postId)
     
     json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
 
@@ -44,3 +49,5 @@ class User(SQLObject):
     views = IntCol()
     upVotes = IntCol()
     downVotes = IntCol()
+    
+    siteId_sourceId_index = DatabaseIndex(site, sourceId, unique=True)
