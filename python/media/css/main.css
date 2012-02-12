@@ -318,3 +318,30 @@ h1.answers {
     background-color: #CCCCCC;
     padding: 7px 10px;
 }
+
+.nodata.row {
+    margin-top: 50px;
+    margin-bottom: 20px;
+}
+
+.nodata h2 {
+    margin-top: 25px;
+    margin-bottom: 7px;
+}
+
+.nodata li {
+    color: inherit;
+    border-bottom: 1px solid #F2F2F2;
+    padding-bottom: 7px;
+    margin-bottom: 7px;
+}
+
+.nodata li:last-of-type {
+    border-bottom: none;
+    padding-bottom: inherit;
+    margin-bottom:  inherit;
+}
+
+.nodata pre {
+    margin-top: 7px;
+}

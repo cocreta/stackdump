@@ -13,9 +13,10 @@ except ImportError:
     # For Python >= 2.6
     import json
 
-from bottle import get, run, static_file, debug, request, HTTPError
+from bottle import get, run, static_file, debug, request, error, HTTPError
 from jinja2 import Environment, PackageLoader
-from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound 
+from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound
+from sqlobject.dberrors import OperationalError
 from pysolr import Solr
 import iso8601
 
@@ -191,13 +192,23 @@ def site_logos(site_key):
 def serve_static(filename):
     return static_file(filename, root=MEDIA_ROOT)
 
+@error(500)
+@uses_templates
+def error500(error):
+    ex = error.exception
+    if isinstance(ex, NoSitesImportedError):
+        return render_template('nodata.html')
+    
+    # otherwise, return the standard error message
+    return repr(error)
+
 @get('/')
 @uses_templates
 @uses_solr
 @uses_db
 def index():
     context = { }
-    context['sites'] = Site.select()
+    context['sites'] = get_sites()
     
     context['random_questions'] = get_random_questions()
     
@@ -210,7 +221,7 @@ def index():
 @uses_db
 def site_index(site_key):
     context = { }
-    context['sites'] = Site.select()
+    context['sites'] = get_sites()
     
     try:
         context['site'] = Site.selectBy(key=site_key).getOne()
@@ -227,7 +238,7 @@ def site_index(site_key):
 @uses_db
 def search():
     context = { }
-    context['sites'] = Site.select()
+    context['sites'] = get_sites()
     
     search_context = perform_search()
     if not search_context:
@@ -244,7 +255,7 @@ def search():
 def site_search(site_key):
     context = { }
     # the template uses this to allow searching on other sites
-    context['sites'] = Site.select()
+    context['sites'] = get_sites()
     
     try:
         context['site'] = Site.selectBy(key=site_key).getOne()
@@ -324,6 +335,33 @@ def get_template_settings():
         template_settings[k] = settings.get(k, None)
     
     return template_settings
+
+class NoSitesImportedError(Exception):
+    def __init__(self, cause=None):
+        self.cause = cause
+    
+    def __str__(self):
+        s = 'NoSitesImportedError('
+        if self.cause:
+            s += str(type(self.cause)) + ' ' + str(self.cause)
+        s += ')'
+        
+        return s
+
+def get_sites():
+    '''\
+    Retrieves a list of Site objects or if there are none, raises a
+    NoSitesImportedError. This error is designed to trigger the 500 error
+    handler.
+    '''
+    try:
+        sites = list(Site.select())
+        if len(sites) == 0:
+            raise NoSitesImportedError()
+        
+        return sites
+    except OperationalError as e:
+        raise NoSitesImportedError(e)
 
 def decode_json_fields(obj):
     '''\
