@@ -80,6 +80,12 @@ if __name__ == '__main__':
     if cmd_options.list_sites:
         list_sites()
     elif cmd_options.delete_site:
+        # confirm with the user first
+        answer = raw_input('Are you sure you want to delete %s? ' % cmd_options.delete_site)
+        if answer.lower() != 'y':
+            sys.exit(1)
+        
+        print ''
         delete_site(cmd_options.delete_site)
     else:
         parser.print_help()
