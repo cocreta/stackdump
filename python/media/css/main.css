@@ -66,6 +66,7 @@ pre code {
 
 .tagline {
     display: block;
+    margin-top: 3px;
 }
 
 .random-questions-container {
