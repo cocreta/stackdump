@@ -5,6 +5,8 @@ import functools
 import re
 import math
 import random
+import urllib2
+from xml.etree import ElementTree
 
 try:
     # For Python < 2.6 or people using a newer version of simplejson
@@ -19,13 +21,14 @@ from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound
 from sqlobject.dberrors import OperationalError
 from pysolr import Solr
 import iso8601
+import html5lib
 
 from stackdump.models import Site, Badge, Comment, User
 
 # STATIC VARIABLES
 BOTTLE_ROOT = os.path.abspath(os.path.dirname(sys.argv[0]))
 MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
-
+SE_QUESTION_ID_RE = re.compile(r'/questions/(?P<id>\d+)/')
 
 # THREAD LOCAL VARIABLES
 thread_locals = threading.local()
@@ -307,6 +310,7 @@ def view_question(site_key, question_id):
     retrieve_sites(results)
     
     result = results.docs[0]
+    rewrite_result(result)
     sort_answers(result)
     context['result'] = result
     
@@ -626,6 +630,81 @@ def sort_answers(result):
         return cmp(a.get('score'), b.get('score'))
     
     answers.sort(comparison_function, reverse=True)
+
+def _rewrite_html(html, app_url_root, sites_by_urls):
+    # wrap the given HTML fragment in an element so it looks like a document.
+    html = '<html>%s</html>' % html
+    
+    parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder('etree'))
+    html = parser.parse(html)
+    
+    # rewrite img URLs
+    for t in html.iter('{http://www.w3.org/1999/xhtml}img'):
+        if t.get('src', None):
+            t.set('title', 'Original URL: %s' % t.get('src'))
+            t.set('src', '%smedia/images/img_placeholder.png' % app_url_root)
+    
+    # rewrite link URLs
+    for t in html.iter('{http://www.w3.org/1999/xhtml}a'):
+        internal_link = False
+        url = t.get('href', None)
+        if url:
+            host = urllib2.Request(url).get_host()
+            site = sites_by_urls.get(host, None)
+            if site:
+                # rewrite this URL for stackdump
+                question_id = SE_QUESTION_ID_RE.search(url)
+                if question_id:
+                    question_id = question_id.groupdict()['id']
+                    url = '%s%s/%s' % (app_url_root, site.key, question_id)
+                    t.set('href', url)
+                    t.set('class', t.get('class', '') + ' internal-link')
+                    internal_link = True
+            
+            if not internal_link:
+                t.set('class', t.get('class', '') + ' external-link')
+    
+    # get a string back
+    # this is used instead of ElementTree.tostring because that returns HTML
+    # with namespaces to conform to XML.
+    walker = html5lib.treewalkers.getTreeWalker('etree', implementation=ElementTree)
+    stream = walker(html)
+    serializer = html5lib.serializer.htmlserializer.HTMLSerializer(omit_optional_tags=False,
+                                                                   quote_attr_values=True,
+                                                                   minimize_boolean_attributes=False)
+    output_generator = serializer.serialize(stream)
+    
+    return ''.join(output_generator)
+
+def rewrite_result(result):
+    '''\
+    Rewrites the HTML in this result (question, answers and comments) so
+    links to other StackExchange sites that exist in Stackdump are rewritten,
+    links elsewhere are decorated with a CSS class, and all images are replaced
+    with a placeholder.
+    
+    The JSON must have been decoded first.
+    '''
+    app_url_root = settings.get('APP_URL_ROOT', '/')
+    
+    # get a list of all the site base URLs
+    sites = list(Site.select())
+    sites_by_urls = dict([ (s.base_url, s) for s in sites ])
+    
+    # rewrite question
+    question = result.get('question')
+    if question:
+        question['body'] = _rewrite_html(question.get('body'), app_url_root, sites_by_urls)
+    # TODO comments
+    
+    # rewrite answers
+    answers = result.get('answers')
+    if answers:
+        for a in answers:
+            a['body'] = _rewrite_html(a.get('body'), app_url_root, sites_by_urls)
+        # TODO: comments
+    
+
 
 # END VIEW HELPERS
 

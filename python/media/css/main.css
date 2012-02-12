@@ -220,6 +220,10 @@ pre code {
     margin-bottom: 7px;
 }
 
+.post-body .external-link {
+    color: #999999;
+}
+
 .post-metadata {
     margin-top: 10px;
     padding-top: 10px;

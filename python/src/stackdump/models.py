@@ -11,6 +11,7 @@ class Site(SQLObject):
     key = UnicodeCol()
     dump_date = UnicodeCol()
     import_date = DateTimeCol()
+    base_url = UnicodeCol()
     
     siteKey_index = DatabaseIndex(key, unique=True)
 

@@ -10,6 +10,7 @@ import time
 import xml.sax
 from datetime import datetime
 import re
+import urllib2
 from optparse import OptionParser
 from xml.etree import ElementTree
 
@@ -529,6 +530,7 @@ parser.add_option('-n', '--site-name', help='Name of the site.')
 parser.add_option('-d', '--site-desc', help='Description of the site (if not in sites).')
 parser.add_option('-k', '--site-key', help='Key of the site (if not in sites).')
 parser.add_option('-c', '--dump-date', help='Dump date of the site.')
+parser.add_option('-u', '--base-url', help='Base URL of the site on the web.')
 
 (cmd_options, cmd_args) = parser.parse_args()
 
@@ -591,7 +593,8 @@ if not (site_name and dump_date):
 # look for the site in the sites RSS file
 site_desc = cmd_options.site_desc
 site_key = cmd_options.site_key
-if not (site_desc and site_key):
+site_base_url = cmd_options.base_url
+if not (site_desc and site_key and site_base_url):
     sites_file_path = os.path.join(script_dir, '../../../../data/sites')
     if os.path.exists(sites_file_path):
         with open(sites_file_path) as f:
@@ -612,9 +615,15 @@ if not (site_desc and site_key):
                         site_key = site_key[:-len('.stackexchange')]
                     
                     site_desc = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
+                    site_base_url = entry.find('{http://www.w3.org/2005/Atom}id').text.strip()
 
-print 'Name: %s\nKey: %s\nDesc: %s\nDump Date: %s\n' % (site_name, site_key, site_desc, dump_date)
+# scrub the URL scheme off the base_url
+if site_base_url:
+    site_base_url = urllib2.Request(site_base_url).get_host()
 
+print 'Name: %s\nKey: %s\nDescription: %s\nDump Date: %s\nBase URL: %s\n' % (site_name, site_key, site_desc, dump_date, site_base_url)
+
+# the base URL is optional.
 if not (site_name and site_key and site_desc and dump_date):
     print 'Could not get all the details for the site.'
     print 'Use command-line parameters to specify the missing details (listed as None).'
@@ -660,7 +669,8 @@ sqlhub.threadConnection = sqlhub.processConnection.transaction()
 conn = sqlhub.threadConnection
 
 # create a new Site
-site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date, import_date=datetime.now())
+site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date,
+            import_date=datetime.now(), base_url=site_base_url)
 
 # BADGES
 # Processing of badges has been disabled because they don't offer any useful
