@@ -47,7 +47,8 @@ then
         PYTHONPATH=$SCRIPT_DIR/python/packages:$SCRIPT_DIR/python/src:$PYTHONPATH
         env PYTHONPATH=$PYTHONPATH $PYTHON_CMD "$@"
         exit $?
-    else
-        echo 'No suitable version of Python was found. Python 2.5 or later is required.'
     fi
 fi
+
+# if we get here, it means the right version of Python was not found
+echo 'No suitable version of Python was found. Python 2.5 or later is required.'
