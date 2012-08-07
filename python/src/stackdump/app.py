@@ -404,7 +404,7 @@ def get_sites():
     handler.
     '''
     try:
-        sites = list(Site.select())
+        sites = list(Site.select().orderBy('name'))
         if len(sites) == 0:
             raise NoSitesImportedError()
         
