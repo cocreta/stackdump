@@ -15,4 +15,4 @@ then
 fi
 
 cd $SCRIPT_DIR/java/solr/server
-$JAVA_CMD -jar start.jar
+$JAVA_CMD -Xmx1G -XX:MaxPermSize=256M -jar start.jar
