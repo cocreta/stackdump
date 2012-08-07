@@ -51,21 +51,23 @@ def delete_site(site_key):
     
     site = Site.select(Site.q.key==site_key).getOne(None)
     if not site:
-        print 'Site key %s does not exist.' % site_key
-        sys.exit(1)
+        print 'Site key "%s" does not exist in database.\n' % site_key
+        # continuing at this point means orphaned entries in solr (e.g. if an
+        # import was aborted so the db transaction was rolled back, but not
+        # entries in solr) are deleted as well.
+    else:
+        sqlhub.threadConnection = sqlhub.processConnection.transaction()
+        
+        print('Deleting site "%s" from the database... ' % site.name)
+        sys.stdout.flush()
+        Site.delete(site.id) # the relationship cascades, so other rows will be deleted
+        print('Deleted.\n')
+        
+        sqlhub.threadConnection.commit(close=True)
     
-    sqlhub.threadConnection = sqlhub.processConnection.transaction()
-    
-    print('Deleting site "%s" from the database... ' % site.name)
-    sys.stdout.flush()
-    Site.delete(site.id) # the relationship cascades, so other rows will be deleted
-    print('Deleted.\n')
-    
-    print('Deleting site "%s" from solr... ' % site.name)
+    print('Deleting site "%s" from solr... ' % (site and site.name or site_key))
     solr.delete(q='siteKey:"%s"' % site_key)
     print('Deleted.\n')
-    
-    sqlhub.threadConnection.commit(close=True)
 
 # END FUNCTIONS
 
