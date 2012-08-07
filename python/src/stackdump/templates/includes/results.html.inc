@@ -1,3 +1,5 @@
+{% import 'common.macros' as macros %}
+
 {% if results|length == 0 %}
 <p><em>No questions or answers found for your query.</em></p>
 {% if site and sites|list|length > 1 %}
@@ -34,7 +36,7 @@
             <h3><a href="{{ SETTINGS.APP_URL_ROOT }}{{ r.site.key }}/{{ r.id }}">{{ r.question.title }}</a></h3>
             <p>{{ r.question.body|striptags|truncate(256) }}</p>
             <p class="post-details">
-                Asked by <strong>{{ r.question.ownerUser.displayName }}</strong> on
+                Asked by <strong>{{ macros.user_name(r.question.ownerUser) }}</strong> on
                 <strong>{{ r.question.creationDate|format_datetime }}</strong>.
             </p>
             <div class="post-tags">

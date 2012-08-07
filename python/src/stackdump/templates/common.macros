@@ -1,0 +1,18 @@
+{% macro user_card(user) %}
+<div class="user-card">
+    {% if user == None %}
+    <p class="user-name"><em title="This user account has since been deleted from the site.">Anonymous User</em></p>
+    {% else %}
+    <p class="user-rep">{{ user.reputation }}</p>
+    <p class="user-name">{{ user.displayName }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro user_name(user) %}
+{% if user == None %}
+<em title="This user account has since been deleted from the site.">Anonymous User</em>
+{% else %}
+{{ user.displayName }}
+{% endif %}
+{% endmacro %}

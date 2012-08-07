@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% import 'common.macros' as macros %}
 
 {% block title %}Stackdump // {{ site.name }} // {{ result.question.title }}{% endblock %}
 
@@ -41,20 +42,13 @@
             <div class="post-metadata">
                 <div class="post-user">
                     <p>asked on <strong>{{ r.question.creationDate|format_datetime }}</strong></p>
-                    <div class="user-card">
-                        <p class="user-rep">{{ r.question.ownerUser.reputation }}</p>
-                        <p class="user-name">{{ r.question.ownerUser.displayName }}</p>
-                    </div>
+                    {{ macros.user_card(r.question.ownerUser) }}
                 </div>
                 
                 {% if r.question.lastEditorUser %}
                 <div class="post-user">
                     <p>last edited <strong>{{ r.question.lastActivityDate|format_datetime }}</strong></p>
-                    <div class="user-card">
-                        <p class="user-rep">{{ r.question.lastEditorUser.reputation }}</p>
-                        <p class="user-name">{{ r.question.lastEditorUser.displayName }}</p>
-                        
-                    </div>
+                    {{ macros.user_card(r.question.lastEditorUser) }}
                 </div>
                 {% endif %}
                 <div class="post-tags">
@@ -74,7 +68,7 @@
                         <p class="post-comment-text">
                             {{ c.text }} &mdash;
                             <span class="post-comment-metadata">
-                                <strong>{{ c.user.displayName }}</strong> on
+                                <strong>{{ macros.user_name(c.user) }}</strong> on
                                 <strong>{{ c.creationDate|format_datetime }}</strong>
                             </span>
                         </p>
@@ -114,20 +108,13 @@
                     <div class="post-metadata">
                         <div class="post-user">
                             <p>answered on <strong>{{ a.creationDate|format_datetime }}</strong></p>
-                            <div class="user-card">
-                                <p class="user-rep">{{ a.ownerUser.reputation }}</p>
-                                <p class="user-name">{{ a.ownerUser.displayName }}</p>
-                            </div>
+                            {{ macros.user_card(a.ownerUser) }}
                         </div>
                         
                         {% if a.lastEditorUser %}
                         <div class="post-user">
                             <p>last edited <strong>{{ a.lastEditDate|format_datetime }}</strong></p>
-                            <div class="user-card">
-                                <p class="user-rep">{{ a.lastEditorUser.reputation }}</p>
-                                <p class="user-name">{{ a.lastEditorUser.displayName }}</p>
-                                
-                            </div>
+                            {{ macros.user_card(a.lastEditorUser) }}
                         </div>
                         {% endif %}
                         <div class="post-tags">
@@ -148,7 +135,7 @@
                                 <p class="post-comment-text">
                                     {{ c.text }} &mdash;
                                     <span class="post-comment-metadata">
-                                        <strong>{{ c.user.displayName }}</strong> on
+                                        <strong>{{ macros.user_name(c.user) }}</strong> on
                                         <strong>{{ c.creationDate|format_datetime }}</strong>
                                     </span>
                                 </p>

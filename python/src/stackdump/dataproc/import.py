@@ -264,7 +264,7 @@ class PostContentHandler(xml.sax.ContentHandler):
             d['body'] = attrs.get('Body', '')
             d['ownerUserId'] = int(attrs.get('OwnerUserId', 0))
             if 'LastEditorUserId' in attrs:
-                d['lastEditorUserId'] = int(attrs.get('LastEditorUserId', ''))
+                d['lastEditorUserId'] = int(attrs.get('LastEditorUserId', 0))
             if 'LastEditDate' in attrs:
                 d['lastEditDate'] = datetime.strptime(attrs.get('LastEditDate'), ISO_DATE_FORMAT)
             d['lastActivityDate'] = datetime.strptime(attrs.get('LastActivityDate'), ISO_DATE_FORMAT)
