@@ -24,7 +24,7 @@
                 
                 
                 <form method="get" action="{{ SETTINGS.APP_URL_ROOT }}{% if site %}{{ site.key }}/{% endif %}search" class="pull-right"> 
-                    <input type="text" placeholder="Search {% if site %}{{ site.name }}{% endif %}" />
+                    <input type="text" placeholder="Search {% if site %}{{ site.name }}{% endif %}" name="q" />
                 </form> 
             </div> 
         </div> 
