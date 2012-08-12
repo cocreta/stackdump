@@ -588,7 +588,7 @@ dump_date = cmd_options.dump_date
 readme_path = os.path.join(xml_root, 'readme.txt')
 if not (site_name and dump_date) and os.path.exists(readme_path):
     # get the site name from the first line of readme.txt. This could be fragile.
-    with open() as f:
+    with open(readme_path, 'r') as f:
         site_readme_desc = f.readline().strip()
     
     # assume if there's a colon in the name, the name part is before, and the date
@@ -672,6 +672,17 @@ if site_key in ('search', 'import', 'media', 'licenses'):
     print 'The site key given, %s, is a reserved word in Stackdump.' % site_key
     print 'Use the --site-key parameter to specify an alternate site key.'
     sys.exit(2)
+
+# rollback any uncommitted entries in solr. Uncommitted entries may occur if
+# this import process is aborted. Solr doesn't have the concept of transactions
+# like databases do, so without a rollback, we'll be committing the previously
+# uncommitted entries plus the newly imported ones.
+#
+# This also means multiple dataproc processes cannot occur concurrently. If you 
+# do the import will be silently incomplete.
+print('Clearing any uncommitted entries in solr...')
+solr._update('<rollback />', waitFlush=None, waitSearcher=None)
+print('Cleared.\n')
 
 # check if site is already in database; if so, purge the data.
 site = list(Site.select(Site.q.key==site_key))

@@ -66,6 +66,17 @@ def delete_site(site_key):
         
         sqlhub.threadConnection.commit(close=True)
     
+    # rollback any uncommitted entries in solr. Uncommitted entries may occur if
+    # the import process is aborted. Solr doesn't have the concept of 
+    # transactions like databases do, so without a rollback, we'll be committing
+    # the previously uncommitted entries plus the newly imported ones.
+    #
+    # This also means multiple dataproc processes cannot occur concurrently. If 
+    # you do the import will be silently incomplete.
+    print('Clearing any uncommitted entries in solr...')
+    solr._update('<rollback />', waitFlush=None, waitSearcher=None)
+    print('Cleared.\n')
+    
     if site_name:
         print('Deleting site "%s" from solr... ' % site_name)
     else:
