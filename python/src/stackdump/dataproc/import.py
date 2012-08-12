@@ -583,32 +583,49 @@ print('Created.\n')
 # SITE INFO
 site_name = cmd_options.site_name
 dump_date = cmd_options.dump_date
-# only look if they were not specified at the command line
-if not (site_name and dump_date):
+# only look if they were not specified at the command line; also only if
+# readme.txt exists (they don't in dumps after Aug 2012)
+readme_path = os.path.join(xml_root, 'readme.txt')
+if not (site_name and dump_date) and os.path.exists(readme_path):
     # get the site name from the first line of readme.txt. This could be fragile.
-    with open(os.path.join(xml_root, 'readme.txt')) as f:
+    with open() as f:
         site_readme_desc = f.readline().strip()
     
     # assume if there's a colon in the name, the name part is before, and the date
     # part is after.
     if ':' in site_readme_desc:
-        site_name, dump_date = site_readme_desc.split(':')
-        site_name = site_name.strip()
-        dump_date = dump_date.strip()
+        readme_site_name, readme_dump_date = site_readme_desc.split(':')
+        readme_site_name = readme_site_name.strip()
+        readme_dump_date = readme_dump_date.strip()
     else:
-        site_name = site_readme_desc
-        dump_date = None
+        readme_site_name = site_readme_desc
+        readme_dump_date = None
     
-    # if the phrase ' - Data Dump' is in the site name, remove it
-    i = site_name.rfind(' - Data Dump')
+    # if the phrase ' - Data Dump' is in the readme site name, remove it
+    i = readme_site_name.rfind(' - Data Dump')
     if i >= 0:
-        site_name = site_name[:i].strip()
+        readme_site_name = readme_site_name[:i].strip()
+    
+    if not site_name:
+        site_name = readme_site_name
+    if not dump_date:
+        dump_date = readme_dump_date
 
-# look for the site in the sites RSS file
+# look for the site in the sites RSS file using the base_url with the id in RSS
 site_desc = cmd_options.site_desc
 site_key = cmd_options.site_key
 site_base_url = cmd_options.base_url
-if not (site_desc and site_key and site_base_url):
+
+# scrub the URL scheme off the base_url
+if site_base_url:
+    # if there is no URL scheme, add one so it can be parsed by urllib2 so it
+    # can strip off other bits in the URL that we don't want
+    if '://' not in site_base_url:
+        site_base_url = 'http://%s' % site_base_url
+    site_base_url = urllib2.Request(site_base_url).get_host()
+
+# attempt to get more information from the sites RSS cache
+if site_base_url and not (site_name and site_desc and site_key):
     sites_file_path = os.path.join(script_dir, '../../../../data/sites')
     if os.path.exists(sites_file_path):
         with open(sites_file_path) as f:
@@ -616,24 +633,30 @@ if not (site_desc and site_key and site_base_url):
             entries = sites_file.findall('{http://www.w3.org/2005/Atom}entry')
             
             for entry in entries:
-                entry_title = entry.find('{http://www.w3.org/2005/Atom}title').text
-                if site_name == entry_title:
-                    # this entry matches the detected site name
-                    # extract the key from the url - remove the http:// and .com
-                    site_key = entry.find('{http://www.w3.org/2005/Atom}id').text
-                    if site_key.startswith('http://'):
-                        site_key = site_key[len('http://'):]
-                    if site_key.endswith('.com'):
-                        site_key = site_key[:-len('.com')]
-                    if site_key.endswith('.stackexchange'):
-                        site_key = site_key[:-len('.stackexchange')]
+                entry_base_url = entry.find('{http://www.w3.org/2005/Atom}id').text
+                if '://' in entry_base_url:
+                    entry_base_url = urllib2.Request(entry_base_url).get_host()
+                if site_base_url == entry_base_url:
+                    # this entry matches the detected site id
+                    if not site_key:
+                        # extract the key from the url
+                        rss_site_key = entry.find('{http://www.w3.org/2005/Atom}id').text
+                        # remove the URL scheme
+                        if '://' in rss_site_key:
+                            rss_site_key = rss_site_key[rss_site_key.find('://')+3:]
+                        # remove the TLD
+                        if rss_site_key.rfind('.') >= 0:
+                            rss_site_key = rss_site_key[:rss_site_key.rfind('.')]
+                        # remove the .stackexchange bit
+                        if '.stackexchange' in rss_site_key:
+                            rss_site_key = rss_site_key[:rss_site_key.find('.stackexchange')]
+                        
+                        site_key = rss_site_key
                     
-                    site_desc = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
-                    site_base_url = entry.find('{http://www.w3.org/2005/Atom}id').text.strip()
-
-# scrub the URL scheme off the base_url
-if site_base_url:
-    site_base_url = urllib2.Request(site_base_url).get_host()
+                    if not site_name:
+                        site_name = entry.find('{http://www.w3.org/2005/Atom}title').text.strip()
+                    if not site_desc:
+                        site_desc = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
 
 print 'Name: %s\nKey: %s\nDescription: %s\nDump Date: %s\nBase URL: %s\n' % (site_name, site_key, site_desc, dump_date, site_base_url)
 
