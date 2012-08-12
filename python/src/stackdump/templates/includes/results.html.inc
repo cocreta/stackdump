@@ -59,15 +59,31 @@
         {% else %}
         <li class="prev disabled"><a href="#">&larr; Previous</a></li>
         {% endif %}
-        {% for p in range(1, total_pages + 1) %}
-        <li {% if p == current_page %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('p=' ~ (p-1)) }}">{{ p }}</a></li>
-    {% endfor %}
-    {% if current_page != total_pages %}
-    {# the next page is just current_page because current_page is ones-based, but the p GET parameter is zero-based #}
-    <li class="next"><a href="{{ REQUEST.url|set_get_parameters('p=' ~ current_page) }}">&rarr; Next</a></li>
-    {% else %}
-    <li class="next disabled"><a href="#">&rarr; Next</a></li>
-    {% endif %}
+        
+        {% set page_numbers = total_pages|get_surrounding_page_numbers(current_page) %}
+        {% if page_numbers|first != 1 %}
+        <li class="disabled"><a href="#">...</a></li>
+        {% endif %}
+        {% for p in page_numbers %}
+        <li {% if p == current_page %}class="active"{% endif %}>
+            {% if p == current_page %}
+            {# this extra a tag is a hack to make bootstrap render properly. #}
+            <a>{{ p }}</a>
+            {% else %}
+            <a href="{{ REQUEST.url|set_get_parameters('p=' ~ (p-1)) }}">{{ p }}</a>
+            {% endif %}
+        </li>
+        {% endfor %}
+        {% if page_numbers|last != total_pages %}
+        <li class="disabled"><a href="#">...</a></li>
+        {% endif %}
+        
+        {% if current_page != total_pages %}
+        {# the next page is just current_page because current_page is ones-based, but the p GET parameter is zero-based #}
+        <li class="next"><a href="{{ REQUEST.url|set_get_parameters('p=' ~ current_page) }}">&rarr; Next</a></li>
+        {% else %}
+        <li class="next disabled"><a href="#">&rarr; Next</a></li>
+        {% endif %}
     </ul>
 </div>
 {% endif %}

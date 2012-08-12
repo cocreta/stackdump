@@ -83,6 +83,33 @@ def set_get_parameters(base_url, *new_parameters):
     
     return '%s?%s' % (base_url, '&'.join(parameters))
 
+def get_surrounding_page_numbers(total_pages, cur_page, count=9):
+    """
+    Returns a list of ints representing pages that surround the cur_page.
+    
+    For example, if total_pages = 34, cur_page = 11, count = 9, then
+    [ 7, 8, 9, 10, 11, 12, 13, 14, 15 ] would be returned.
+    """
+    # if we can show all the page links, show them all
+    if total_pages <= count:
+        return range(1, total_pages + 1)
+    
+    # the -1 is for the current page in the middle
+    pages_per_side = int(math.floor((count - 1) / 2))
+    left_max = cur_page - pages_per_side
+    right_max = cur_page + pages_per_side
+    
+    if left_max < 1:
+        diff = 1 - left_max
+        left_max = 1
+        right_max += diff
+    elif right_max > total_pages:
+        diff = right_max - total_pages
+        left_max -= diff
+        right_max = total_pages
+    
+    return range(left_max, right_max + 1)
+
 # END CUSTOM TEMPLATE TAGS AND FILTERS
 
 
@@ -108,6 +135,7 @@ def uses_templates(fn):
             )
             thread_locals.template_env.filters['format_datetime'] = format_datetime
             thread_locals.template_env.filters['set_get_parameters'] = set_get_parameters
+            thread_locals.template_env.filters['get_surrounding_page_numbers'] = get_surrounding_page_numbers
     
     if not fn:
         init_templates()
