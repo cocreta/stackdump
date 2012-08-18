@@ -11,6 +11,11 @@ pre code {
     background-color: transparent;
 }
 
+h3, h4, h5, h6 {
+    line-height: normal;
+    margin-bottom: 0.5em;
+}
+
 /* don't want it to have a fixed position; so we'll override it */
 .topbar {
     position: absolute;
@@ -358,12 +363,12 @@ h1.answers {
     float: right;
 }
 
-.nodata.row {
+.nodata.row, .importinprogress.row {
     margin-top: 50px;
     margin-bottom: 20px;
 }
 
-.nodata h2 {
+.nodata h2, .importinprogress h2 {
     margin-top: 25px;
     margin-bottom: 7px;
 }
@@ -383,4 +388,8 @@ h1.answers {
 
 .nodata pre {
     margin-top: 7px;
+}
+
+.importinprogress .subinfo {
+    color: #999999;
 }

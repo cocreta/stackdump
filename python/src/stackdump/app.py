@@ -237,6 +237,13 @@ def error500(error):
     ex = error.exception
     if isinstance(ex, NoSitesImportedError):
         return render_template('nodata.html')
+    if isinstance(ex, OperationalError):
+        # if the error is the database is locked, then it is likely that an
+        # import operation is in progress (for SQLite anyway). Return a nice
+        # error page for that.
+        # HACK: the exception object doesn't seem to provide a better way though.
+        if 'database is locked' in ex.args:
+            return render_template('importinprogress.html')
     
     # otherwise, return the standard error message
     return repr(error)
@@ -431,14 +438,11 @@ def get_sites():
     NoSitesImportedError. This error is designed to trigger the 500 error
     handler.
     '''
-    try:
-        sites = list(Site.select().orderBy('name'))
-        if len(sites) == 0:
-            raise NoSitesImportedError()
-        
-        return sites
-    except OperationalError as e:
-        raise NoSitesImportedError(e)
+    sites = list(Site.select().orderBy('name'))
+    if len(sites) == 0:
+        raise NoSitesImportedError()
+    
+    return sites
 
 def decode_json_fields(obj):
     '''\
