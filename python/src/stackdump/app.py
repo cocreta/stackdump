@@ -784,7 +784,7 @@ if __name__ == '__main__':
     # only do these things in the child processes, not the parents. Applies when
     # the auto-reload option is on (reloader=True). When it is on, the
     # BOTTLE_CHILD env var is True if this is the child process.
-    if os.environ.get('BOTTLE_CHILD', True):
+    if os.environ.get('BOTTLE_CHILD', 'false') == 'true':
         print('Serving media from: %s' % MEDIA_ROOT)
     
     # load the settings file
@@ -793,6 +793,7 @@ if __name__ == '__main__':
         settings = sys.modules.get('settings')
         settings = dict([ (k, getattr(settings, k)) for k in dir(settings) if not k.startswith('__') ])
     else:
+        print('No settings file found; using defaults.')
         settings = { }
     
     if settings.get('DEBUG', False):
