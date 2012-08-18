@@ -365,12 +365,12 @@ h1.answers {
     float: right;
 }
 
-.nodata.row, .importinprogress.row {
+.nodata.row, .importinprogress.row, .errormessage.row {
     margin-top: 50px;
     margin-bottom: 20px;
 }
 
-.nodata h2, .importinprogress h2 {
+.nodata h2, .importinprogress h2, .errormessage h2 {
     margin-top: 25px;
     margin-bottom: 7px;
 }
@@ -392,6 +392,6 @@ h1.answers {
     margin-top: 7px;
 }
 
-.importinprogress .subinfo {
+.importinprogress .subinfo, .errormessage .subinfo {
     color: #999999;
 }

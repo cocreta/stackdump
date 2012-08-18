@@ -6,6 +6,7 @@ import re
 import math
 import random
 import urllib2
+import socket
 from xml.etree import ElementTree
 
 try:
@@ -244,8 +245,19 @@ def error500(error):
         # HACK: the exception object doesn't seem to provide a better way though.
         if 'database is locked' in ex.args:
             return render_template('importinprogress.html')
+    if isinstance(ex, socket.error):
+        # if the error is connection refused, then it is likely because Solr is
+        # not running. Show a nice error message.
+        if ex.errno == 111:
+            return render_template('solrnotrunning.html')
     
     # otherwise, return the standard error message
+    if not settings.DEBUG:
+        try:
+            return render_template('500.html')
+        except: # if there are any errors, just render Bottle's default error page.
+            pass
+    
     return repr(error)
 
 @get('/')
