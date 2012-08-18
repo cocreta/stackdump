@@ -13,7 +13,7 @@
 STACKDUMP_HOME=/opt/stackdump/
 
 # this is the user that Stackdump runs under
-STACKDUMP_USER=sam
+STACKDUMP_USER=stackdump
 
 WEB_PID_FILE=/var/run/stackdump_web.pid
 

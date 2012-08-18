@@ -14,7 +14,7 @@
 STACKDUMP_HOME=/opt/stackdump/
 
 # this is the user that Stackdump runs under
-STACKDUMP_USER=sam
+STACKDUMP_USER=stackdump
 
 SOLR_PID_FILE=/var/run/stackdump_solr.pid
 
