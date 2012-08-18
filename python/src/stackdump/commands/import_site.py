@@ -20,6 +20,7 @@ from sqlobject.styles import DefaultStyle
 from pysolr import Solr
 
 from stackdump.models import Site, Badge, Comment, User
+from stackdump import settings
 
 try:
     # For Python < 2.6 or people using a newer version of simplejson
@@ -568,17 +569,15 @@ if not os.path.exists(xml_root):
     print('The given XML root path does not exist.')
     sys.exit(1)
 
-db_path = os.path.abspath(os.path.join(script_dir, '../../../../data/stackdump.sqlite'))
-
 # connect to the database
 print('Connecting to the database...')
-conn_str = 'sqlite://' + db_path
+conn_str = settings.DATABASE_CONN_STR
 sqlhub.processConnection = connectionForURI(conn_str)
 print('Connected.\n')
 
 # connect to solr
 print('Connecting to solr...')
-solr = Solr("http://localhost:8983/solr/")
+solr = Solr(settings.SOLR_URL)
 print('Connected.\n')
 
 # ensure required tables exist

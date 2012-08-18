@@ -24,6 +24,7 @@ import iso8601
 import html5lib
 
 from stackdump.models import Site, Badge, Comment, User
+from stackdump import settings
 
 # STATIC VARIABLES
 BOTTLE_ROOT = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -158,7 +159,7 @@ def uses_solr(fn):
     '''
     def init_solr():
         if not hasattr(thread_locals, 'solr_conn'):
-            thread_locals.solr_conn = Solr("http://localhost:8983/solr/")
+            thread_locals.solr_conn = Solr(settings.SOLR_URL)
     
     if not fn:
         init_solr()
@@ -181,8 +182,7 @@ def uses_db(fn):
     '''
     def init_db():
         if not hasattr(thread_locals, 'db_conn'):
-            db_path = os.path.abspath(os.path.join(BOTTLE_ROOT, '../../../data/stackdump.sqlite'))
-            conn_str = 'sqlite://' + db_path
+            conn_str = settings.DATABASE_CONN_STR
             thread_locals.db_conn = sqlhub.threadConnection = connectionForURI(conn_str)
     
     if not fn:
@@ -387,7 +387,7 @@ def view_question_redirect(site_key, question_id):
     Redirects users from the long-form, proper URLs to the shorter one used
     by Stackdump.
     '''
-    redirect('%s%s/%s' % (settings['APP_URL_ROOT'], site_key, question_id))
+    redirect('%s%s/%s' % (settings.APP_URL_ROOT, site_key, question_id))
 
 # END WEB REQUEST METHODS
 
@@ -422,9 +422,9 @@ def render_template(template_path, context=None):
 
 def get_template_settings():
     template_settings = { }
-    keys = settings.get('TEMPLATE_SETTINGS', [ ])
+    keys = settings.TEMPLATE_SETTINGS
     for k in keys:
-        template_settings[k] = settings.get(k, None)
+        template_settings[k] = getattr(settings, k, None)
     
     return template_settings
 
@@ -755,7 +755,7 @@ def rewrite_result(result):
     
     The JSON must have been decoded first.
     '''
-    app_url_root = settings.get('APP_URL_ROOT', '/')
+    app_url_root = settings.APP_URL_ROOT
     
     # get a list of all the site base URLs
     sites = list(Site.select())
@@ -787,25 +787,15 @@ if __name__ == '__main__':
     if os.environ.get('BOTTLE_CHILD', 'false') == 'true':
         print('Serving media from: %s' % MEDIA_ROOT)
     
-    # load the settings file
-    __import__('settings')
-    if 'settings' in sys.modules.keys():
-        settings = sys.modules.get('settings')
-        settings = dict([ (k, getattr(settings, k)) for k in dir(settings) if not k.startswith('__') ])
-    else:
-        print('No settings file found; using defaults.')
-        settings = { }
-    
-    if settings.get('DEBUG', False):
-        debug(True)
+    debug(settings.DEBUG)
     
     # run the server!
-    server = settings.get('SERVER_ADAPTER', 'wsgiref')
+    server = settings.SERVER_ADAPTER
     
     run(
         server=server,
-        host=settings.get('SERVER_HOST', '0.0.0.0'),
-        port=settings.get('SERVER_PORT', 8080),
+        host=settings.SERVER_HOST,
+        port=settings.SERVER_PORT,
         reloader=True
     )
 

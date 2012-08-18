@@ -12,17 +12,16 @@ from sqlobject import sqlhub, connectionForURI
 from pysolr import Solr
 
 from stackdump.models import Site
+from stackdump import settings
 
 script_dir = os.path.dirname(sys.argv[0])
 
 # FUNCTIONS
 def list_sites():
     # connect to the data sources
-    db_path = os.path.abspath(os.path.join(script_dir, '../../../../data/stackdump.sqlite'))
-    
     # connect to the database
     print('Connecting to the database...')
-    conn_str = 'sqlite://' + db_path
+    conn_str = settings.DATABASE_CONN_STR
     sqlhub.processConnection = connectionForURI(conn_str)
     print('Connected.\n')
     
@@ -36,17 +35,15 @@ def list_sites():
     
 def delete_site(site_key):
     # connect to the data sources
-    db_path = os.path.abspath(os.path.join(script_dir, '../../../../data/stackdump.sqlite'))
-    
     # connect to the database
     print('Connecting to the database...')
-    conn_str = 'sqlite://' + db_path
+    conn_str = settings.DATABASE_CONN_STR
     sqlhub.processConnection = connectionForURI(conn_str)
     print('Connected.\n')
     
     # connect to solr
     print('Connecting to solr...')
-    solr = Solr("http://localhost:8983/solr/")
+    solr = Solr(settings.SOLR_URL)
     print('Connected.\n') 
     
     site_name = None
