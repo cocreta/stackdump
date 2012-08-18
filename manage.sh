@@ -35,5 +35,5 @@ else
     # shift off the command name so we don't pass it on
     shift
 
-    $SCRIPT_DIR/start_python.sh $command $@
+    $SCRIPT_DIR/start_python.sh $command "$@"
 fi
