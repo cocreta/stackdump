@@ -14,7 +14,12 @@ SERVER_PORT = 8080
 # slash.
 APP_URL_ROOT = '/'
 
+# number of comments to show before the rest are hidden behind a 'click to show'
+# link
+NUM_OF_DEFAULT_COMMENTS = 3
+
 # settings that are available in templates
 TEMPLATE_SETTINGS = [
-    'APP_URL_ROOT'
+    'APP_URL_ROOT',
+    'NUM_OF_DEFAULT_COMMENTS'
 ]

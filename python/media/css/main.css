@@ -243,6 +243,7 @@ pre code {
 .post-comments ul {
     list-style: none;
     margin-left: 0;
+    margin-bottom: 18px;
 }
 
 .post-comments li {
@@ -273,6 +274,10 @@ li .post-comment-text {
 
 li .post-comment-metadata {
     color: #999999;
+}
+
+.show-comments {
+    display: none;
 }
 
 .user-card {
