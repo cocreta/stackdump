@@ -15,7 +15,7 @@ except ImportError:
     # For Python >= 2.6
     import json
 
-from bottle import get, run, static_file, debug, request, error, HTTPError
+from bottle import get, run, static_file, debug, request, error, HTTPError, redirect
 from jinja2 import Environment, PackageLoader
 from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound
 from sqlobject.dberrors import OperationalError
@@ -380,6 +380,14 @@ def view_question(site_key, question_id):
     context['result'] = result
     
     return render_template('question.html', context)
+
+@get('/:site_key#[\w\.]+#/questions/:question_id#\d+#')
+def view_question_redirect(site_key, question_id):
+    '''
+    Redirects users from the long-form, proper URLs to the shorter one used
+    by Stackdump.
+    '''
+    redirect('%s%s/%s' % (settings['APP_URL_ROOT'], site_key, question_id))
 
 # END WEB REQUEST METHODS
 
