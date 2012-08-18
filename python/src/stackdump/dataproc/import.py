@@ -349,7 +349,7 @@ class PostContentHandler(xml.sax.ContentHandler):
         for id, q in self.unfinished_questions.items():
             if len(q['answers']) >= q['answerCount']:
                 if len(q['answers']) > q['answerCount']:
-                    print('Question ID [%s] expected to have %d answers, but got %d instead. Ignoring inconsistency.' % (q['id'], q['answerCount'], len(q['answers'])))
+                    print('Question ID [%s] expected to have %d answers, but has %d instead. Ignoring inconsistency.' % (q['id'], q['answerCount'], len(q['answers'])))
              
                 try:
                     # question is complete, store it.
@@ -418,7 +418,7 @@ class PostContentHandler(xml.sax.ContentHandler):
             q['comments'].extend(comments[q['id']])
         
         if len(q['comments']) != q['commentCount']:
-            print('Post ID [%s] expected to have %d comments, but got %d instead. Ignoring inconsistency.' % (q['id'], q['commentCount'], len(q['comments'])))
+            print('Post ID [%s] expected to have %d comments, but has %d instead. Ignoring inconsistency.' % (q['id'], q['commentCount'], len(q['comments'])))
         
         # add comments to the answers
         for a in q['answers']:
@@ -426,7 +426,7 @@ class PostContentHandler(xml.sax.ContentHandler):
                 a['comments'].extend(comments[a['id']])
             
             if len(a['comments']) != a['commentCount']:
-                print('Post ID [%s] expected to have %d comments, but got %d instead. Ignoring inconsistency.' % (a['id'], a['commentCount'], len(a['comments'])))
+                print('Post ID [%s] expected to have %d comments, but has %d instead. Ignoring inconsistency.' % (a['id'], a['commentCount'], len(a['comments'])))
         
         doc = { }
         
@@ -474,7 +474,15 @@ class PostContentHandler(xml.sax.ContentHandler):
         question_obj = { }
         question_obj['id'] = q['id']
         if 'acceptedAnswerId' in q:
-            question_obj['acceptedAnswerId'] = q['acceptedAnswerId']
+            # check that the accepted answer is in the question's answers section.
+            # sometimes they're not, e.g. if the question was merged - the
+            # acceptedAnswerId would point to an answer in another question
+            # instead. We don't deal with merged questions yet, so this option
+            # means questions won't appear to have answers when they don't.
+            if q['acceptedAnswerId'] in post_ids:
+                question_obj['acceptedAnswerId'] = q['acceptedAnswerId']
+            else:
+                print 'Question [ID# %i] had an unknown answer. Possibly been merged or migrated. Ignoring inconsistency.' % (q['id'], )
         question_obj['creationDate'] = q['creationDate']
         question_obj['score'] = q['score']
         question_obj['viewCount'] = q['viewCount']
@@ -514,8 +522,8 @@ class PostContentHandler(xml.sax.ContentHandler):
         self.commit_finished_questions()
         
         questions_to_commit = [ ]
-        for id,q in self.unfinished_questions.items():
-            print('Question [ID# %d] was expected to have %d answers, but got %d instead. Ignoring inconsistency.' % (q['id'], q['answerCount'], len(q['answers'])))
+        for id, q in self.unfinished_questions.items():
+            print('Question [ID# %d] was expected to have %d answers, but has %d instead. Ignoring inconsistency.' % (q['id'], q['answerCount'], len(q['answers'])))
 
             try:
                 # question is complete, store it.
