@@ -296,6 +296,18 @@ li .post-comment-metadata {
     padding: 4px 7px;
 }
 
+div.moderated {
+    background-color: #F2F2F2;
+    padding: 10px;
+    text-align: center;
+    margin-left: 0;
+}
+
+div.moderated p {
+    margin: 0;
+    font-size: 1.2em;
+}
+
 div.answers {
     margin-top: 30px;
 }

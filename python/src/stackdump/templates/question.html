@@ -66,6 +66,14 @@
         </div>
     </div>
     
+    {% if r.question.closedDate %}
+    <div class="row moderated">
+        <div class="span16">
+            <p>This question was <em>closed</em> by a moderator on <strong>{{ r.question.closedDate|format_datetime }}</strong>.</p>
+        </div>
+    </div>
+    {% endif %}
+    
     <div class="row answers">
         <div class="span16">
             {% if r.answers|length > 0 %}
