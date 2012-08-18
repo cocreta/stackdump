@@ -26,8 +26,10 @@
 
 <h2>Import them into Stackdump</h2>
 <p>
-    This process can take upwards of 10 hours or more depending on
-    the size of the dump you're trying to import.
+    This process can take upwards of 10 hours or more per site depending on
+    the size of the dump you're trying to import. StackOverflow will take around
+    10 hours, while the smaller ones like android.stackexchange.com take about
+    a minute or less.
 </p>
 <p>
     Before you can import data though, you need to download the
@@ -37,7 +39,7 @@
     <li>Fire up a terminal/command prompt and navigate to the directory you extracted Stackdump into.</li>
     <li>
         Execute the following command -
-        <pre>./start_python.sh python/src/stackdump/dataproc/get_sites_info.py</pre>
+        <pre>./manage.sh download_site_info</pre>
     </li>
 </ol>
 <p>
@@ -49,6 +51,12 @@
     <li>Find the directory containing the data dump XML files. This is likely to be a directory inside the temporary location you extracted to earlier. The directory will contain files like <em>posts.xml</em>, <em>users.xml</em> and <em>comments.xml</em>.</li>
     <li>
         Execute the following command, replacing <em>path_to_dir_with_xml</em> with the path from the previous step -
-        <pre>./start_python.sh python/src/stackdump/dataproc/import.py path_to_dir_with_xml</pre>
+        <pre>./manage.sh import_site path_to_dir_with_xml</pre>
     </li>
 </ol>
+<p>
+    You will most likely have to specify the site's base URL (e.g.
+    <em>programmers.stackexchange.com</em>) and the dump date (e.g.
+    <em>August 2012</em>) for the import process to have enough information to
+    proceed. The command will prompt if this is required.
+</p>
