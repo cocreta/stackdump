@@ -283,6 +283,7 @@ li .post-comment-metadata {
 
 .show-comments {
     display: none;
+    margin-bottom: 18px;
 }
 
 .user-card {
