@@ -545,6 +545,7 @@ parser.add_option('-d', '--site-desc', help='Description of the site (if not in 
 parser.add_option('-k', '--site-key', help='Key of the site (if not in sites).')
 parser.add_option('-c', '--dump-date', help='Dump date of the site.')
 parser.add_option('-u', '--base-url', help='Base URL of the site on the web.')
+parser.add_option('-Y', help='Answer yes to any confirmation questions.', dest='answer_yes', action='store_true', default=False)
 
 (cmd_options, cmd_args) = parser.parse_args()
 
@@ -672,6 +673,15 @@ if site_key in ('search', 'import', 'media', 'licenses'):
     print 'The site key given, %s, is a reserved word in Stackdump.' % site_key
     print 'Use the --site-key parameter to specify an alternate site key.'
     sys.exit(2)
+
+# confirm site details with user to make sure we don't accidentally overwrite
+# another site.
+if not cmd_options.answer_yes:
+    confirm_prompt = 'Are these details correct (answer "yes" to proceed, anything else to abort)? '
+    confirm_answer = raw_input(confirm_prompt)
+    if confirm_answer != 'yes':
+        print 'Import aborted on user request.'
+        sys.exit(3)
 
 # rollback any uncommitted entries in solr. Uncommitted entries may occur if
 # this import process is aborted. Solr doesn't have the concept of transactions
