@@ -118,6 +118,7 @@ h2. Credits
 Stackdump leverages several open-source projects to do various things, including -
 
 * "twitter-bootstrap":http://github.com/twitter/bootstrap for the UI
+* "jQuery":http://jquery.com for the UI
 * "bottle.py":http://bottlepy.org for the web framework
 * "cherrypy":http://cherrypy.org for the built-in web server
 * "pysolr":https://github.com/toastdriven/pysolr/ to connect from Python to the search indexer, Apache Solr
@@ -126,6 +127,7 @@ Stackdump leverages several open-source projects to do various things, including
 * "SQLObject":http://www.sqlobject.org/ for writing and reading from the database
 * "iso8601":http://pypi.python.org/pypi/iso8601/ for date parsing
 * "httplib2":http://code.google.com/p/httplib2/ as a dependency of pysolr
+* "Apache Solr":http://lucene.apache.org/solr/ for search functionality
 
 h2. Things not supported... yet
 
