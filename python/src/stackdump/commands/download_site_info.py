@@ -10,6 +10,10 @@ import sys
 script_dir = os.path.dirname(sys.argv[0])
 sites_file_path = os.path.join(script_dir, '../../../../data/sites')
 
+# ensure the data directory exists
+if not os.path.exists(os.path.dirname(sites_file_path)):
+    os.mkdir(os.path.dirname(sites_file_path))
+
 # download the sites RSS file
 print 'Downloading StackExchange sites RSS file...',
 urllib.urlretrieve('http://stackexchange.com/feeds/sites', sites_file_path)
