@@ -1,0 +1,120 @@
+h1. Stackdump - an offline browser for StackExchange sites.
+
+Stackdump was conceived for those who work in work environments that do not allow easy access to the StackExchange family of websites. It allows you to host a read-only instance of the StackExchange sites locally, accessible via a web browser.
+
+Stackdump comprises of two components - the search indexer ("Apache Solr":http://lucene.apache.org/solr/) and the web application. It uses the "StackExchange Data Dumps":http://blog.stackoverflow.com/2009/06/stack-overflow-creative-commons-data-dump/, published quarterly by StackExchange, as its source of data.
+
+h2. Screenshots
+
+!http://edgylogic.com/dynmedia/301/640x480/!
+!http://edgylogic.com/dynmedia/303/640x480/!
+!http://edgylogic.com/dynmedia/302/640x480/!
+
+h2. System Requirements
+
+Stackdump was written in Python and requires Python 2.5 or later (but not Python 3). It leverages Apache Solr, which requires the Java runtime (JRE), version 6 or later.
+
+Besides that, there are no OS-dependent dependencies and should work on any platform that Python and Java run on (although it only comes bundled with Linux scripts at the moment). It was, however, developed and tested on CentOS 5 running Python 2.7 and JRE 6 update 27.
+
+You will also need "7-zip":http://www.7-zip.org/ to extract the data dump files, but Stackdump does not use it directly so you can perform the extraction on another machine first.
+
+It is recommended to run this on a system with at least 3GB of RAM, particularly if you intend to import StackOverflow into Stackdump. Apache Solr requires a fair bit of memory during the import process.
+
+h2. Setting up
+
+Stackdump was designed for offline environments or environments with poor internet access, therefore it is bundled with all the dependencies it requires (with the exception of Python, Java and 7-zip). 
+
+As long as you have:
+* "Python":http://python.org/download/,
+* "Java":http://java.com/en/download/manual.jsp,
+* Stackdump,
+* the "StackExchange Data Dump":http://www.clearbits.net/creators/146-stack-exchange-data-dump (Note: this is only available as a torrent), and
+* "7-zip" (needed to extract the data dump files)
+
+...you should be able to get an instance up and running.
+
+To provide a better experience, Stackdump can use the RSS feed content to pre-fill some of the required details during the import process, as well as to display the site logos in the app. Stackdump comes bundled with a script that downloads and places these bits in the right places. If you're in a completely offline environment however, it may be worth running this script on a connected box first.
+
+h3. Extract Stackdump
+
+Stackdump was to be self-contained, so to get it up and running, simply extract the Stackdump download to an appropriate location.
+
+h3. Verify dependencies
+
+Next, you should verify that the required Java and Python versions are accessible in the path.
+
+Type @java -version@ and check that it is at least version 1.6.
+
+Then type @python -V@ and check that it is version 2.5 or later (and not Python 3).
+
+If you would rather not put these versions in the path (e.g. you don't want to override the default version of Python in your Linux distribution), you can tell Stackdump which Java and/or Python to use explicitly by creating a file named @JAVA_CMD@ or @PYTHON_CMD@ respectively in the Stackdump root directory, and placing the path to the executable in there.
+
+h3. Download additional site information
+
+As mentioned earlier, Stackdump can use additional information available in the StackExchange RSS feed to pre-fill required details during the site import process and to show the logos for each site.
+
+To start the download, execute the following command in the Stackdump root directory -
+
+@./manage.sh download_site_info@
+
+If Stackdump will be running in a completely offline environment, it is recommended that you extract and run this command in a connected environment first. If that is not possible, you can manually download the required pieces -
+
+* download the "RSS feed":http://stackexchange.com/feeds/sites to a file
+* for each site you will be importing, work out the __site key__ and download the logo by substituting the site key into this URL: http://sstatic.net/<strong>site_key</strong>/img/icon-48.png where *site_key* is the site key. The site key is generally the bit in the URL before .stackexchange.com, or just the domain without the TLD, e.g. for the Salesforce StackExchange at http://salesforce.stackexchange.com, it is just __salesforce__, while for Server Fault at http://serverfault.com, it is __serverfault__.
+
+The RSS feed file should be copied to the file @stackdump_dir/data/sites@, and the logos should be copied to @stackdump_dir/python/media/images/logos@ and named with the site key and extension, e.g. @serverfault.png@.
+
+h3. Import sites
+
+Each data dump for a StackExchange site is a "7-zip":http://www.7-zip.org/ file. Extract the file corresponding to the site you wish to import into a temporary directory. It should have a bunch of XML files in it when complete.
+
+Now make sure you have the search indexer up and running. This can be done by simply executing the @stackdump_dir/start_solr.sh@ command.
+
+To start the import process, execute the following command -
+
+@stackdump_dir/manage.sh import_site --base-url site_url --dump-date dump_date path_to_xml_files@
+
+... where __site_url__ is the URL of the site you're importing, e.g. __android.stackexchange.com__; __dump_date__ is the date of the data dump you're importing, e.g. __August 2012__, and finally __path_to_xml_files__ is the path to the XML files you just extracted. The __dump_date__ is a text string that is shown in the app only, so it can be in any format you want.
+
+This can take anywhere between a minute to 10 hours or more depending on the site you're importing. As a rough guide, __android.stackexchange.com__ took a minute on my VM, while __stackoverflow.com__ took just over 10 hours.
+
+Repeat these steps for each site you wish to import.
+
+h3. Start the app
+
+To start Stackdump, execute the following command -
+
+@stackdump_dir/start_web.sh@
+
+... and visit port 8080 on that machine.
+
+If you need to change the port that it runs on, modify @stackdump_dir/python/src/stackdump/settings.py@ and restart the app.
+
+Stackdump comes bundled with some init.d scripts as well which were tested on CentOS 5. These are located in the @init.d@ directory. To use these, you will need to modify them to specify the path to the Stackdump root directory and the user to run under.
+
+Both the search indexer and the app need to be running for Stackdump to work.
+
+h2. Credits
+
+Stackdump leverages several open-source projects to do various things, including -
+
+* "twitter-bootstrap":http://github.com/twitter/bootstrap for the UI
+* "bottle.py":http://bottlepy.org for the web framework
+* "cherrypy":http://cherrypy.org for the built-in web server
+* "pysolr":https://github.com/toastdriven/pysolr/ to connect from Python to the search indexer, Apache Solr
+* "html5lib":http://code.google.com/p/html5lib/ for parsing HTML
+* "Jinja2":http://jinja.pocoo.org/ for templating
+* "SQLObject":http://www.sqlobject.org/ for writing and reading from the database
+* "iso8601":http://pypi.python.org/pypi/iso8601/ for date parsing
+* "httplib2":http://code.google.com/p/httplib2/ as a dependency of pysolr
+
+h2. Things not supported
+
+* searching or browsing by tags
+* tag wiki pages
+* badges
+* post history, e.g. reasons why are a post was closed are not listed
+
+h2. License
+
+Stackdump is licensed under the "MIT License":http://en.wikipedia.org/wiki/MIT_License.
