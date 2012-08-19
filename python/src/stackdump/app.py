@@ -245,6 +245,10 @@ def error500(error):
         # HACK: the exception object doesn't seem to provide a better way though.
         if 'database is locked' in ex.args:
             return render_template('importinprogress.html')
+        # check if we get a 'no such table' error. If so, this means we haven't
+        # had any data imported yet.
+        if ex.message.startswith('no such table:'):
+            return render_template('nodata.html')
     if isinstance(ex, socket.error):
         # if the error is connection refused, then it is likely because Solr is
         # not running. Show a nice error message.
