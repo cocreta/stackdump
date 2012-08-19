@@ -6,9 +6,9 @@ Stackdump comprises of two components - the search indexer ("Apache Solr":http:/
 
 h2. Screenshots
 
-"Stackdump home":http://edgylogic.com/dynmedia/301/640x480/
-"Stackdump search results":http://edgylogic.com/dynmedia/303/640x480/
-"Stackdump question view":http://edgylogic.com/dynmedia/302/640x480/
+"Stackdump home":http://edgylogic.com/dynmedia/301/
+"Stackdump search results":http://edgylogic.com/dynmedia/303/
+"Stackdump question view":http://edgylogic.com/dynmedia/302/
 
 h2. System Requirements
 
@@ -27,7 +27,7 @@ Stackdump was designed for offline environments or environments with poor intern
 As long as you have:
 * "Python":http://python.org/download/,
 * "Java":http://java.com/en/download/manual.jsp,
-* "Stackdump"https://bitbucket.org/samuel.lai/stackdump/downloads,
+* "Stackdump":https://bitbucket.org/samuel.lai/stackdump/downloads,
 * the "StackExchange Data Dump":http://www.clearbits.net/creators/146-stack-exchange-data-dump (Note: this is only available as a torrent), and
 * "7-zip":http://www.7-zip.org/ (needed to extract the data dump files)
 
@@ -60,7 +60,7 @@ To start the download, execute the following command in the Stackdump root direc
 If Stackdump will be running in a completely offline environment, it is recommended that you extract and run this command in a connected environment first. If that is not possible, you can manually download the required pieces -
 
 * download the "RSS feed":http://stackexchange.com/feeds/sites to a file
-* for each site you will be importing, work out the __site key__ and download the logo by substituting the site key into this URL: http://sstatic.net/site_key/img/icon-48.png where *site_key* is the site key. The site key is generally the bit in the URL before .stackexchange.com, or just the domain without the TLD, e.g. for the Salesforce StackExchange at http://salesforce.stackexchange.com, it is just __salesforce__, while for Server Fault at http://serverfault.com, it is __serverfault__.
+* for each site you will be importing, work out the __site key__ and download the logo by substituting the site key into this URL: @http://sstatic.net/site_key/img/icon-48.png@ where *site_key* is the site key. The site key is generally the bit in the URL before .stackexchange.com, or just the domain without the TLD, e.g. for the Salesforce StackExchange at http://salesforce.stackexchange.com, it is just __salesforce__, while for Server Fault at http://serverfault.com, it is __serverfault__.
 
 The RSS feed file should be copied to the file @stackdump_dir/data/sites@, and the logos should be copied to the @stackdump_dir/python/media/images/logos@ directory and named with the site key and file type extension, e.g. @serverfault.png@.
 
