@@ -41,7 +41,7 @@ Stackdump was to be self-contained, so to get it up and running, simply extract 
 
 h3. Verify dependencies
 
-Next, you should verify that the required Java and Python versions are accessible in the PATH.
+Next, you should verify that the required Java and Python versions are accessible in the PATH. (If you haven't installed them yet, now is a good time to do so.)
 
 Type @java -version@ and check that it is at least version 1.6.
 
@@ -76,9 +76,17 @@ To start the import process, execute the following command -
 
 ... where site_url is the URL of the site you're importing, e.g. __android.stackexchange.com__; dump_date is the date of the data dump you're importing, e.g. __August 2012__, and finally path_to_xml_files is the path to the XML files you just extracted. The dump_date is a text string that is shown in the app only, so it can be in any format you want.
 
+For example, to import the August 2012 data dump of the Android StackExchange site, you would execute -
+
+@stackdump_dir/manage.sh import_site --base-url android.stackexchange.com --dump-date "August 2012" /tmp/android@
+
+It is normal to get messages about unknown PostTypeIds and missing comments and answers. These errors are likely due to those posts being hidden via moderation.
+
 This can take anywhere between a minute to 10 hours or more depending on the site you're importing. As a rough guide, __android.stackexchange.com__ took a minute on my VM, while __stackoverflow.com__ took just over 10 hours.
 
-Repeat these steps for each site you wish to import.
+Repeat these steps for each site you wish to import. Do not attempt to import multiple sites at the same time; it will not work and you may end up with half-imported sites.
+
+The import process can be cancelled at any time without any adverse effect, however on the next run it will have to start from scratch again.
 
 h3. Start the app
 
@@ -86,13 +94,24 @@ To start Stackdump, execute the following command -
 
 @stackdump_dir/start_web.sh@
 
-... and visit port 8080 on that machine.
+... and visit port 8080 on that machine. That's it - your own offline, read-only instance of StackExchange.
 
 If you need to change the port that it runs on, modify @stackdump_dir/python/src/stackdump/settings.py@ and restart the app.
 
 Stackdump comes bundled with some init.d scripts as well which were tested on CentOS 5. These are located in the @init.d@ directory. To use these, you will need to modify them to specify the path to the Stackdump root directory and the user to run under.
 
 Both the search indexer and the app need to be running for Stackdump to work.
+
+h2. Maintenance
+
+Stackdump stores all its data in the @data@ directory under its root directory. If you want to start fresh, just stop the app and the search indexer, delete that directory and restart the app and search indexer.
+
+To delete certain sites from Stackdump, use the manage_sites management command -
+
+@stackdump_dir/manage.sh manage_sites -l@ to list the sites (and their site keys) currently in the system;
+@stackdump_dir/manage.sh manage_sites -d site_key@ to delete a particular site.
+
+It is not necessary to delete a site before importing a new data dump of it though; the import process will automatically purge the old copy during the import process.
 
 h2. Credits
 
