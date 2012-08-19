@@ -10,8 +10,15 @@ fi
 
 if [ -z "`which $JAVA_CMD 2>/dev/null`" ]
 then
-    echo "Java not found. Try specifying path in a file named JAVA_CMD in the script dir."
+    echo "Java not found. Try specifying the path to the Java executable in a file named"
+    echo "JAVA_CMD in this script's directory."
     exit 1
+fi
+
+# ensure the data directory exists
+if [ ! -e "$SCRIPT_DIR/data" ]
+then
+    mkdir "$SCRIPT_DIR/data"
 fi
 
 cd $SCRIPT_DIR/java/solr/server

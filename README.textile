@@ -62,7 +62,7 @@ If Stackdump will be running in a completely offline environment, it is recommen
 * download the "RSS feed":http://stackexchange.com/feeds/sites to a file
 * for each site you will be importing, work out the __site key__ and download the logo by substituting the site key into this URL: @http://sstatic.net/site_key/img/icon-48.png@ where *site_key* is the site key. The site key is generally the bit in the URL before .stackexchange.com, or just the domain without the TLD, e.g. for the Salesforce StackExchange at http://salesforce.stackexchange.com, it is just __salesforce__, while for Server Fault at http://serverfault.com, it is __serverfault__.
 
-The RSS feed file should be copied to the file @stackdump_dir/data/sites@, and the logos should be copied to the @stackdump_dir/python/media/images/logos@ directory and named with the site key and file type extension, e.g. @serverfault.png@.
+The RSS feed file should be copied to the file @stackdump_dir/data/sites@ (create the @data@ directory if it doesn't exist), and the logos should be copied to the @stackdump_dir/python/media/images/logos@ directory and named with the site key and file type extension, e.g. @serverfault.png@.
 
 h3. Import sites
 
