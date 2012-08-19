@@ -498,20 +498,21 @@
    <!-- fields are listed here so searches can be performed against them -->
    <!-- the ID field needs to be a string for the QueryElevationComponent -->
    <field name="id" type="string" indexed="true" stored="true" required="true" /> 
-   <field name="siteName" type="string" indexed="true" stored="true" required="true" />
+   <field name="siteKey" type="string" indexed="true" stored="true" required="true" />
    <field name="creationDate" type="tdate" indexed="true" stored="false" required="true"/>
-   <field name="score" type="tint" indexed="true" stored="false" required="true"/>
+   <!-- the field name in XML is score, but that's a reserved lucene keyword -->
+   <field name="votes" type="tint" indexed="true" stored="false" required="true"/>
    <field name="viewCount" type="tint" indexed="true" stored="false" required="true"/>
    <!-- TODO: the title field should be boosted at index-time -->
    <field name="title" type="text_general" indexed="true" stored="false" required="true"/>
    <field name="question-json" type="string" indexed="false" stored="true" required="true"/>
-   <field name="answer-json" type="string" indexed="false" stored="true" multiValued="true"/>
+   <field name="answers-json" type="string" indexed="false" stored="true" multiValued="true"/>
    <field name="ownerUserId" type="tint" indexed="true" stored="true" required="true"/>
    <field name="lastEditorUserId" type="tint" indexed="false" stored="false"/>
    <field name="lastActivityDate" type="tdate" indexed="true" stored="false"/>
    <field name="communityOwnedDate" type="tdate" indexed="false" stored="false"/>
    <field name="closedDate" type="tdate" indexed="false" stored="false"/>
-   <field name="tag" type="string" indexed="true" stored="false" multiValued="true"/>
+   <field name="tags" type="string" indexed="true" stored="false" multiValued="true"/>
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
@@ -564,8 +565,10 @@
    <dynamicField name="ignored_*" type="ignored" multiValued="true"/>
    <dynamicField name="attr_*" type="text_general" indexed="true" stored="true" multiValued="true"/>
 
-   <dynamicField name="random_*" type="random" />
    -->
+   <!-- this random field allows retrieval of random records by sorting by a
+        field named random_* where the * is a random number/string. -->
+   <dynamicField name="random_*" type="random" indexed="true" stored="false" />
    
    <!-- uncomment the following to ignore any fields that don't already match an existing 
         field name or dynamic field, rather than reporting them as an error. 
@@ -584,7 +587,7 @@
  <defaultSearchField>text</defaultSearchField>
 
  <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
- <solrQueryParser defaultOperator="OR"/>
+ <solrQueryParser defaultOperator="AND"/>
 
   <!-- copyField commands copy one field to another at the time a document
         is added to the index.  It's used either to index the same field differently,

@@ -1,0 +1,142 @@
+#! /bin/bash
+#
+# stackdump_solr:       Starts the Solr instance for Stackdump
+#
+# chkconfig: 345 99 01
+# description: This daemon provides the search engine capability for Stackdump.\
+#              It is a required part of Stackdump; Stackdump will not work \
+#              without it.
+
+# Source function library.
+. /etc/init.d/functions
+
+# this needs to be the path of the Stackdump root directory.
+STACKDUMP_HOME=/opt/stackdump/
+
+# this is the user that Stackdump runs under
+STACKDUMP_USER=stackdump
+
+SOLR_PID_FILE=/var/run/stackdump_solr.pid
+
+if [ ! -d "$STACKDUMP_HOME" ]
+then
+    echo "The STACKDUMP_HOME variable does not point to a valid directory."
+    exit 1
+fi
+
+base=${0##*/}
+
+start() {
+	echo -n $"Starting Stackdump - Solr... "
+	
+        # create the logs directory if it doesn't already exist
+        if [ ! -d "$STACKDUMP_HOME/logs" ]
+        then
+            runuser -s /bin/bash $STACKDUMP_USER -c "mkdir $STACKDUMP_HOME/logs"
+        fi
+        
+        # check if it is already running
+        SOLR_PID=`cat $SOLR_PID_FILE 2>/dev/null`
+        if [ ! -z "$SOLR_PID" ]
+        then
+            if [ ! -z "$(pgrep -P $SOLR_PID)" ]
+            then
+                echo
+                echo "Stackdump - Solr is already running."
+                exit 2
+            else
+                # the PID is stale.
+                rm $SOLR_PID_FILE
+            fi
+        fi
+        
+        # run it!
+        runuser -s /bin/bash $STACKDUMP_USER -c "$STACKDUMP_HOME/start_solr.sh >> $STACKDUMP_HOME/logs/solr.log 2>&1" &
+        SOLR_PID=$!
+        RETVAL=$?
+        
+        if [ $RETVAL = 0 ]
+        then
+            echo $SOLR_PID > $SOLR_PID_FILE
+            success $"$base startup"
+        else
+            failure $"$base startup"
+        fi
+	echo
+	return $RETVAL
+}
+
+stop() {
+        # check if it is running
+        SOLR_PID=`cat $SOLR_PID_FILE 2>/dev/null`
+        if [ -z "$SOLR_PID" ] || [ -z "$(pgrep -P $SOLR_PID)" ]
+        then
+            echo "Stackdump - Solr is not running."
+            exit 2
+        fi
+        
+        echo -n $"Shutting down Stackdump - Solr... "
+        
+        # it is running, so shut it down.
+        # there are many levels of processes here and the kill signal needs to
+        # be sent to the actual Java process for the process to stop, so let's
+        # just kill the whole process group.
+        RUNUSER_CMD_PID=`pgrep -P $SOLR_PID`
+        RUNUSER_CMD_PGRP=`ps -o pgrp --no-headers -p $RUNUSER_CMD_PID`
+        
+        pkill -g $RUNUSER_CMD_PGRP
+        RETVAL=$?
+	[ $RETVAL = 0 ] && success $"$base shutdown" || failure $"$base shutdown"
+	rm -f $SOLR_PID_FILE
+	echo
+	return $RETVAL
+}
+
+status() {
+    # check if it is running
+    SOLR_PID=`cat $SOLR_PID_FILE 2>/dev/null`
+    if [ -z "$SOLR_PID" ]
+    then
+        echo "Stackdump - Solr is not running."
+        exit 0
+    else
+        if [ -z "$(pgrep -P $SOLR_PID)" ]
+        then
+            rm -f $SOLR_PID_FILE
+            echo "Stackdump - Solr is not running."
+            exit 0
+        else
+            echo "Stackdump - Solr is running."
+            exit 0
+        fi
+    fi
+}
+
+restart() {
+	stop
+	start
+}
+
+RETVAL=0
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+        status
+	;;
+  restart)
+	restart
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
+exit $RETVAL
+

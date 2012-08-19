@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Stackdump // cannot connect to the search index
+{% endblock %}
+
+{% block body %}
+    <div class="row errormessage">
+        <div class="span16">
+            <h1>Stackdump cannot connect to the search index.</h1>
+            <p>
+                This may be due to a temporary issue (e.g. due to high load).
+                Try your query again later.
+            </p>
+            
+            <p class="subinfo">
+                If this issue does not resolve itself in a few minutes, check
+                that the <em>stackdump_solr</em> daemon/service or
+                <em>start_solr.sh</em> process is running.
+            </p>
+            
+        </div>
+    </div>
+{% endblock %}

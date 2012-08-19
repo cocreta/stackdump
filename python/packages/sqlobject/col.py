@@ -33,13 +33,6 @@ from formencode import validators
 from classregistry import findClass
 from itertools import count
 
-# Jython doesn't have the buffer sequence type (bug #1521).
-# using this workaround instead.
-try:
-    buffer
-except NameError, e:
-    buffer = str
-
 NoDefault = sqlbuilder.NoDefault
 
 import datetime

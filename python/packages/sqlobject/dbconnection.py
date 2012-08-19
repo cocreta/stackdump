@@ -1037,4 +1037,3 @@ import postgres
 import rdbhost
 import sqlite
 import sybase
-import jython_sqlite
