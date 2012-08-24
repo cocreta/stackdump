@@ -6,6 +6,7 @@
 
 import os
 import sys
+import socket
 from optparse import OptionParser
 
 from sqlobject import sqlhub, connectionForURI
@@ -44,6 +45,13 @@ def delete_site(site_key):
     # connect to solr
     print('Connecting to solr...')
     solr = Solr(settings.SOLR_URL)
+    # pysolr doesn't try to connect until a request is made, so we'll make a ping request
+    try:
+        solr._send_request('GET', '%s/admin/ping' % solr.path)
+    except socket.error, e:
+        print('Failed to connect to solr - error was: %s' % str(e))
+        print('Aborting.')
+        sys.exit(2)
     print('Connected.\n') 
     
     site_name = None
@@ -96,8 +104,9 @@ if __name__ == '__main__':
         list_sites()
     elif cmd_options.delete_site:
         # confirm with the user first
-        answer = raw_input('Are you sure you want to delete %s? ' % cmd_options.delete_site)
-        if answer.lower() != 'y':
+        answer = raw_input('Are you sure you want to delete %s (type "yes" to delete)? ' % cmd_options.delete_site)
+        if answer.lower() != 'yes':
+            print 'Aborting on user request.'
             sys.exit(1)
         
         print ''

@@ -11,6 +11,7 @@ import xml.sax
 from datetime import datetime
 import re
 import urllib2
+import socket
 from optparse import OptionParser
 from xml.etree import ElementTree
 
@@ -578,6 +579,13 @@ print('Connected.\n')
 # connect to solr
 print('Connecting to solr...')
 solr = Solr(settings.SOLR_URL)
+# pysolr doesn't try to connect until a request is made, so we'll make a ping request
+try:
+    solr._send_request('GET', '%s/admin/ping' % solr.path)
+except socket.error, e:
+    print('Failed to connect to solr - error was: %s' % str(e))
+    print('Aborting.')
+    sys.exit(2)
 print('Connected.\n')
 
 # ensure required tables exist
