@@ -719,7 +719,7 @@ def sort_answers(result):
 
 def _rewrite_html(html, app_url_root, sites_by_urls):
     # wrap the given HTML fragment in an element so it looks like a document.
-    html = '<html>%s</html>' % html
+    html = '<div>%s</div>' % html
     
     parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder('etree'))
     html = parser.parse(html)
@@ -755,7 +755,7 @@ def _rewrite_html(html, app_url_root, sites_by_urls):
     # with namespaces to conform to XML.
     walker = html5lib.treewalkers.getTreeWalker('etree', implementation=ElementTree)
     stream = walker(html)
-    serializer = html5lib.serializer.htmlserializer.HTMLSerializer(omit_optional_tags=False,
+    serializer = html5lib.serializer.htmlserializer.HTMLSerializer(omit_optional_tags=True,
                                                                    quote_attr_values=True,
                                                                    minimize_boolean_attributes=False)
     output_generator = serializer.serialize(stream)
