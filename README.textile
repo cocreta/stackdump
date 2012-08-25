@@ -18,7 +18,9 @@ Besides that, there are no OS-dependent dependencies and should work on any plat
 
 You will also need "7-zip":http://www.7-zip.org/ to extract the data dump files, but Stackdump does not use it directly so you can perform the extraction on another machine first.
 
-It is recommended to run this on a system with at least 3GB of RAM, particularly if you intend to import StackOverflow into Stackdump. Apache Solr requires a fair bit of memory during the import process.
+It is recommended that Stackdump be run on a system with at least 3GB of RAM, particularly if you intend to import StackOverflow into Stackdump. Apache Solr requires a fair bit of memory during the import process. It should also have a fair bit of space available; having at least roughly the space used by the raw, extracted, data dump XML files is a good rule of thumb (note that once imported, the raw data dump XML files are not needed by Stackdump any more).
+
+Finally, Stackdump has been tested and works in the latest browsers (IE9, FF10+, Chrome, Safari). It degrades fairly gracefully in older browsers, although some will have rendering issues, e.g. IE8.
 
 h2. Setting up
 
@@ -97,6 +99,8 @@ To start Stackdump, execute the following command -
 ... and visit port 8080 on that machine. That's it - your own offline, read-only instance of StackExchange.
 
 If you need to change the port that it runs on, modify @stackdump_dir/python/src/stackdump/settings.py@ and restart the app.
+
+The aforementioned @settings.py@ file also contains some other settings that control how Stackdump works.
 
 Stackdump comes bundled with some init.d scripts as well which were tested on CentOS 5. These are located in the @init.d@ directory. To use these, you will need to modify them to specify the path to the Stackdump root directory and the user to run under.
 
