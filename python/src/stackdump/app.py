@@ -272,7 +272,7 @@ def index():
     context = { }
     context['sites'] = get_sites()
     
-    context['random_questions'] = get_random_questions()
+    context['random_questions'] = get_random_questions(count=settings.NUM_OF_RANDOM_QUESTIONS)
     
     return render_template('index.html', context)
 
@@ -341,7 +341,7 @@ def site_index(site_key):
     except SQLObjectNotFound:
         raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
     
-    context['random_questions'] = get_random_questions(site_key=site_key)    
+    context['random_questions'] = get_random_questions(site_key=site_key, count=settings.NUM_OF_RANDOM_QUESTIONS)    
     
     return render_template('index.html', context)
 

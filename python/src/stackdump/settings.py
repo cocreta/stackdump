@@ -30,3 +30,6 @@ from default_settings import *
 # number of comments to show before the rest are hidden behind a 'click to show'
 # link
 #NUM_OF_DEFAULT_COMMENTS = 3
+
+# number of random questions to show on search query pages
+#NUM_OF_RANDOM_QUESTIONS = 3

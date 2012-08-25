@@ -28,8 +28,12 @@ APP_URL_ROOT = '/'
 # link
 NUM_OF_DEFAULT_COMMENTS = 3
 
+# number of random questions to show on search query pages
+NUM_OF_RANDOM_QUESTIONS = 3
+
 # settings that are available in templates
 TEMPLATE_SETTINGS = [
     'APP_URL_ROOT',
-    'NUM_OF_DEFAULT_COMMENTS'
+    'NUM_OF_DEFAULT_COMMENTS',
+    'NUM_OF_RANDOM_QUESTIONS'
 ]
