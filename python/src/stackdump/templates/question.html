@@ -22,7 +22,13 @@
     </div>
     <div class="row question">
         <div class="span16">
-            <h1>{{ r.question.title }}</h1>
+            <h1>
+                {% if site.base_url %}
+                <span title="StackExchange question URL: http://{{ site.base_url }}/questions/{{ r.question.id }}">{{ r.question.title }}</span>
+                {% else %}
+                {{ r.question.title }}
+                {% endif %}
+            </h1>
             <div class="post-stats-vertical">
                 <div class="post-stat">
                     <p class="post-stat-value {% if r.question.score < 0 %}post-stat-value-poor{% endif %}">

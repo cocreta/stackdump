@@ -4,7 +4,13 @@
     <p class="user-name"><em title="This user account has since been deleted from the site.">Anonymous User</em></p>
     {% else %}
     <p class="user-rep">{{ user.reputation }}</p>
-    <p class="user-name">{{ user.displayName }}</p>
+    <p class="user-name">
+        {% if user.site.base_url %}
+        <span title="StackExchange user profile URL: http://{{ user.site.base_url }}/users/{{ user.sourceId }}">{{ user.displayName }}</span>
+        {% else %}
+        {{ user.displayName }}
+        {% endif %}
+    </p>
     {% endif %}
 </div>
 {% endmacro %}
@@ -13,7 +19,11 @@
 {% if user == None %}
 <em title="This user account has since been deleted from the site.">Anonymous User</em>
 {% else %}
+{% if user.site.base_url %}
+<span title="StackExchange user profile URL: http://{{ user.site.base_url }}/users/{{ user.sourceId }}">{{ user.displayName }}</span>
+{% else %}
 {{ user.displayName }}
+{% endif %}
 {% endif %}
 {% endmacro %}
 
