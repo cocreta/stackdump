@@ -6,6 +6,19 @@
 {% block extrahead %}
 <link rel="stylesheet" href="{{ SETTINGS.APP_URL_ROOT }}media/js/google-code-prettify/prettify.css" type="text/css" />
 <script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/google-code-prettify/prettify.js"></script>
+{% if result.siteKey == 'math' %}
+<!-- this extra configuration tells mathjax to treat text between single $
+     characters as equations. Mathjax is only enabled on math.stackexchange
+     where there is a much lower likelihood of other discussion containing
+     $ characters. -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+  'HTML-CSS': {imageFont: null}
+});
+</script>
+<script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+{% endif %}
 <script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/comments.js"></script>
 {% endblock %}
 

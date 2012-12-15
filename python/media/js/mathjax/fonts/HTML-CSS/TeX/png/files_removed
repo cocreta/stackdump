@@ -1,0 +1,9 @@
+The image font files for Mathjax have been removed to save space. If image fonts
+are really necessary, add them back by downloading the local installation 
+distribution from the Mathjax website (http://www.mathjax.org/download) and 
+copying the files under fonts/HTML-CSS/TeX/png/**/* to here.
+
+You will also need to modify 
+<stackdump_home>/python/src/stackdump/templates/question.html
+and remove the `imageFont:null` configuration parameter from the config section
+at the top of the page.  
