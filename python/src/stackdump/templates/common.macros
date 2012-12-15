@@ -34,13 +34,13 @@
         {% if c.score > 0 %}
         <p class="post-comment-score">{{ c.score }}</p>
         {% endif %}
-        <p class="post-comment-text">
-            {{ c.text }} &mdash;
+        <div class="post-comment-text">
+            {{ c.text|safe }} &mdash;
             <span class="post-comment-metadata">
                 <strong>{{ user_name(c.user) }}</strong> on
                 <strong>{{ c.creationDate|format_datetime }}</strong>
             </span>
-        </p>
+        </div>
     </li>
     {% endfor %}
 </ul>

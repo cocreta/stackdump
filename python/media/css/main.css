@@ -278,6 +278,12 @@ li .post-comment-text {
     margin-bottom: 0;
 }
 
+/* this rule is needed as comments are wrapped in <p>...</p> but we want the
+ * user name afterwards to appear on the same line. */
+li .post-comment-text > p {
+    display: inline;
+}
+
 li .post-comment-metadata {
     color: #999999;
 }

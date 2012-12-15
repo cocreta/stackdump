@@ -23,6 +23,8 @@ from sqlobject.dberrors import OperationalError
 from pysolr import Solr
 import iso8601
 import html5lib
+from html5lib.filters._base import Filter as HTML5LibFilterBase
+import markdown
 
 from stackdump.models import Site, Badge, Comment, User
 from stackdump import settings
@@ -391,6 +393,7 @@ def view_question(site_key, question_id):
     retrieve_sites(results)
     
     result = results.docs[0]
+    convert_comments_to_html(result)
     rewrite_result(result)
     sort_answers(result)
     context['result'] = result
@@ -717,9 +720,57 @@ def sort_answers(result):
     
     answers.sort(comparison_function, reverse=True)
 
+def convert_comments_to_html(results):
+    '''\
+    Converts the comments in the given result(s) from Markdown to HTML.
+    
+    Either a single result (a dict) or a list of results (a list of dicts)
+    is accepted.
+    '''
+    markdown_config = {
+        'output_format' : 'xhtml5',
+        'safe_mode' : 'escape'
+    }
+    
+    # is this a single result?
+    if isinstance(results, dict):
+        results = [ results ]
+    
+    for r in results:
+        question = r.get('question', { })
+        for c in question.get('comments', [ ]):
+            c['text'] = markdown.markdown(c.get('text'), **markdown_config)
+        
+        answers = r.get('answers', [ ])
+        for a in answers:
+            for c in a.get('comments', [ ]):
+                c['text'] = markdown.markdown(c.get('text'), **markdown_config)
+
 def _rewrite_html(html, app_url_root, sites_by_urls):
-    # wrap the given HTML fragment in an element so it looks like a document.
-    html = '<div>%s</div>' % html
+    
+    class HTMLDocElementsFilter(HTML5LibFilterBase):
+        '''\
+        This filter removes all html, head and body tags, leaving only the HTML
+        fragments behind. This is what we want; the extra tags are introduced
+        as part of the html5lib processing.
+        
+        This is needed instead of using the omit_optional_tags parameter on the
+        serializer because that also omits optional element tags, e.g. the end
+        p tag if the p block is enclosed in another element, which is allowed in
+        HTML5.
+        '''
+        def __iter__(self):
+            for token in HTML5LibFilterBase.__iter__(self):
+                type = token['type']
+                if type in ('StartTag', 'EmptyTag', 'EndTag'):
+                    name = token['name']
+                    if name in ('html', 'head', 'body'):
+                        continue
+                
+                yield token
+    
+    # wrap the given HTML fragments in an element so it looks like a document.
+    html = '<html>%s</html>' % html
     
     parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder('etree'))
     html = parser.parse(html)
@@ -754,10 +805,12 @@ def _rewrite_html(html, app_url_root, sites_by_urls):
     # this is used instead of ElementTree.tostring because that returns HTML
     # with namespaces to conform to XML.
     walker = html5lib.treewalkers.getTreeWalker('etree', implementation=ElementTree)
-    stream = walker(html)
-    serializer = html5lib.serializer.htmlserializer.HTMLSerializer(omit_optional_tags=True,
+    stream = HTMLDocElementsFilter(walker(html))
+    serializer = html5lib.serializer.htmlserializer.HTMLSerializer(omit_optional_tags=False,
                                                                    quote_attr_values=True,
-                                                                   minimize_boolean_attributes=False)
+                                                                   minimize_boolean_attributes=False,
+                                                                   use_trailing_solidus=True,
+                                                                   space_before_trailing_solidus=True)
     output_generator = serializer.serialize(stream)
     
     return ''.join(output_generator)
@@ -781,14 +834,16 @@ def rewrite_result(result):
     question = result.get('question')
     if question:
         question['body'] = _rewrite_html(question.get('body'), app_url_root, sites_by_urls)
-    # TODO comments
+        for c in question.get('comments', [ ]):
+            c['text'] = _rewrite_html(c.get('text'), app_url_root, sites_by_urls)
     
     # rewrite answers
     answers = result.get('answers')
     if answers:
         for a in answers:
             a['body'] = _rewrite_html(a.get('body'), app_url_root, sites_by_urls)
-        # TODO: comments
+            for c in a.get('comments', [ ]):
+                c['text'] = _rewrite_html(c.get('text'), app_url_root, sites_by_urls)
     
 
 
