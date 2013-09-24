@@ -39,7 +39,8 @@ class BaseContentHandler(xml.sax.ContentHandler):
     """
     Base content handler.
     """
-    def __init__(self, site, obj_class):
+    def __init__(self, conn, site, obj_class):
+        self.conn = conn
         self.site = site
         self.obj_class = obj_class
         self.cur_props = None
@@ -73,7 +74,7 @@ class BaseContentHandler(xml.sax.ContentHandler):
                 # need to convert the attr names to DB column names
                 props_for_db[self.db_style.pythonAttrToDBColumn(k)] = v
             
-            conn.query(conn.sqlrepr(Insert(self.obj_class.sqlmeta.table, values=props_for_db)))
+            self.conn.query(self.conn.sqlrepr(Insert(self.obj_class.sqlmeta.table, values=props_for_db)))
             
         except Exception, e:
             # could not insert this, so ignore the row
@@ -95,8 +96,8 @@ class BadgeContentHandler(BaseContentHandler):
     
     <row Id="15" UserId="6" Name="Supporter" Date="2010-05-19T21:57:31.000" />
     """
-    def __init__(self, site):
-        BaseContentHandler.__init__(self, site, Badge)
+    def __init__(self, conn, site):
+        BaseContentHandler.__init__(self, conn, site, Badge)
     
     def startElement(self, name, attrs):
         if name != 'row':
@@ -126,8 +127,8 @@ class CommentContentHandler(BaseContentHandler):
             key. " CreationDate="2010-05-19T23:48:05.680" UserId="23" />
 
     """
-    def __init__(self, site):
-        BaseContentHandler.__init__(self, site, Comment)
+    def __init__(self, conn, site):
+        BaseContentHandler.__init__(self, conn, site, Comment)
     
     def startElement(self, name, attrs):
         if name != 'row':
@@ -169,15 +170,15 @@ class UserContentHandler(BaseContentHandler):
              &lt;/p&gt;&#xA;" Views="52" UpVotes="11" DownVotes="1" />
 
     """
-    def __init__(self, site):
-        BaseContentHandler.__init__(self, site, User)
+    def __init__(self, conn, site):
+        BaseContentHandler.__init__(self, conn, site, User)
     
     def startElement(self, name, attrs):
         if name != 'row':
             return
         
         try:
-            d = self.cur_props = { 'site' : site }
+            d = self.cur_props = { 'site' : self.site }
             d['sourceId'] = int(attrs['Id'])
             d['reputation'] = int(attrs.get('Reputation', 0))
             d['creationDate'] = datetime.strptime(attrs.get('CreationDate'), ISO_DATE_FORMAT)
@@ -226,7 +227,8 @@ class PostContentHandler(xml.sax.ContentHandler):
     """
     TAGS_RE = re.compile(u'<([^>]+)>')
     
-    def __init__(self, site):
+    def __init__(self, solr, site):
+        self.solr = solr
         self.site = site
         self.unfinished_questions = { }
         self.orphan_answers = { }
@@ -513,7 +515,7 @@ class PostContentHandler(xml.sax.ContentHandler):
         """
         Commits the given list of questions to solr.
         """
-        solr.add(questions, commit=commit)
+        self.solr.add(questions, commit=commit)
     
     def commit_all_questions(self):
         """
@@ -548,259 +550,292 @@ class PostContentHandler(xml.sax.ContentHandler):
         for question_id, answers in self.orphan_answers.items():
             print('There are %d answers for missing question [ID# %d]. Ignoring orphan answers.' % (len(answers), question_id))
 
-# MAIN METHOD
-parser = OptionParser(usage='usage: %prog [options] xml_root_dir')
-parser.add_option('-n', '--site-name', help='Name of the site.')
-parser.add_option('-d', '--site-desc', help='Description of the site (if not in sites).')
-parser.add_option('-k', '--site-key', help='Key of the site (if not in sites).')
-parser.add_option('-c', '--dump-date', help='Dump date of the site.')
-parser.add_option('-u', '--base-url', help='Base URL of the site on the web.')
-parser.add_option('-Y', help='Answer yes to any confirmation questions.', dest='answer_yes', action='store_true', default=False)
+# METHODS
+def get_file_path(dir_path, filename):
+    """
+    Returns the absolute path to the file, matching the file in a
+    case-insensitive manner.
 
-(cmd_options, cmd_args) = parser.parse_args()
+    If multiple files match the filename (e.g. on case-sensitive filesystems) a
+    ValueError will be thrown.
 
-if len(cmd_args) < 1:
-    print('The path to the directory containing the extracted XML files is required.')
-    sys.exit(1)
+    If no matching files are found, None will be returned.
 
-xml_root = cmd_args[0]
-print('Using the XML root path: ' + xml_root + '\n')
+    @param dir_path: the directory containing the file
+    @param filename: the filename to make a case-insensitive match with
+    @return: the absolute path to the matched file
+    """
+    files = [ f for f in os.listdir(dir_path) ]
+    matches = [ ]
 
-if not os.path.exists(xml_root):
-    print('The given XML root path does not exist.')
-    sys.exit(1)
+    for f in files:
+        if not os.path.isfile(os.path.join(dir_path, f)):
+            continue
+        if f.lower() == filename.lower():
+            matches.append(f)
 
-# connect to the database
-print('Connecting to the database...')
-conn_str = settings.DATABASE_CONN_STR
-sqlhub.processConnection = connectionForURI(conn_str)
-print('Connected.\n')
+    if len(matches) == 0:
+        return None
 
-# connect to solr
-print('Connecting to solr...')
-solr = Solr(settings.SOLR_URL)
-# pysolr doesn't try to connect until a request is made, so we'll make a ping request
-try:
-    solr._send_request('GET', '%s/admin/ping' % solr.path)
-except socket.error, e:
-    print('Failed to connect to solr - error was: %s' % str(e))
-    print('Aborting.')
-    sys.exit(2)
-print('Connected.\n')
+    if len(matches) > 1:
+        raise ValueError('More than one file matched the given filename - ' + repr(matches))
 
-# ensure required tables exist
-print("Creating tables if they don't exist...")
-Site.createTable(ifNotExists=True)
-Badge.createTable(ifNotExists=True)
-Comment.createTable(ifNotExists=True)
-User.createTable(ifNotExists=True)
-print('Created.\n')
+    return os.path.abspath(os.path.join(dir_path, matches[0]))
 
-# SITE INFO
-site_name = cmd_options.site_name
-dump_date = cmd_options.dump_date
-# only look if they were not specified at the command line; also only if
-# readme.txt exists (they don't in dumps after Aug 2012)
-readme_path = os.path.join(xml_root, 'readme.txt')
-if not (site_name and dump_date) and os.path.exists(readme_path):
-    # get the site name from the first line of readme.txt. This could be fragile.
-    with open(readme_path, 'r') as f:
-        site_readme_desc = f.readline().strip()
-    
-    # assume if there's a colon in the name, the name part is before, and the date
-    # part is after.
-    if ':' in site_readme_desc:
-        readme_site_name, readme_dump_date = site_readme_desc.split(':')
-        readme_site_name = readme_site_name.strip()
-        readme_dump_date = readme_dump_date.strip()
-    else:
-        readme_site_name = site_readme_desc
-        readme_dump_date = None
-    
-    # if the phrase ' - Data Dump' is in the readme site name, remove it
-    i = readme_site_name.rfind(' - Data Dump')
-    if i >= 0:
-        readme_site_name = readme_site_name[:i].strip()
-    
-    if not site_name:
-        site_name = readme_site_name
-    if not dump_date:
-        dump_date = readme_dump_date
 
-# look for the site in the sites RSS file using the base_url with the id in RSS
-site_desc = cmd_options.site_desc
-site_key = cmd_options.site_key
-site_base_url = cmd_options.base_url
+def import_site(xml_root, site_name, dump_date, site_desc, site_key,
+                site_base_url, answer_yes=False):
+    print('Using the XML root path: ' + xml_root + '\n')
 
-# scrub the URL scheme off the base_url
-if site_base_url:
-    # if there is no URL scheme, add one so it can be parsed by urllib2 so it
-    # can strip off other bits in the URL that we don't want
-    if '://' not in site_base_url:
-        site_base_url = 'http://%s' % site_base_url
-    site_base_url = urllib2.Request(site_base_url).get_host()
+    if not os.path.exists(xml_root):
+        print('The given XML root path does not exist.')
+        sys.exit(1)
 
-# attempt to get more information from the sites RSS cache
-if site_base_url and not (site_name and site_desc and site_key):
-    sites_file_path = os.path.join(script_dir, '../../../../data/sites')
-    if os.path.exists(sites_file_path):
-        with open(sites_file_path) as f:
-            sites_file = ElementTree.parse(f)
-            entries = sites_file.findall('{http://www.w3.org/2005/Atom}entry')
-            
-            for entry in entries:
-                entry_base_url = entry.find('{http://www.w3.org/2005/Atom}id').text
-                if '://' in entry_base_url:
-                    entry_base_url = urllib2.Request(entry_base_url).get_host()
-                if site_base_url == entry_base_url:
-                    # this entry matches the detected site id
-                    if not site_key:
-                        # extract the key from the url
-                        rss_site_key = entry.find('{http://www.w3.org/2005/Atom}id').text
-                        # remove the URL scheme
-                        if '://' in rss_site_key:
-                            rss_site_key = rss_site_key[rss_site_key.find('://')+3:]
-                        # remove the TLD
-                        if rss_site_key.rfind('.') >= 0:
-                            rss_site_key = rss_site_key[:rss_site_key.rfind('.')]
-                        # remove the .stackexchange bit
-                        if '.stackexchange' in rss_site_key:
-                            rss_site_key = rss_site_key[:rss_site_key.find('.stackexchange')]
-                        
-                        site_key = rss_site_key
-                    
-                    if not site_name:
-                        site_name = entry.find('{http://www.w3.org/2005/Atom}title').text.strip()
-                    if not site_desc:
-                        site_desc = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
+    # connect to the database
+    print('Connecting to the database...')
+    conn_str = settings.DATABASE_CONN_STR
+    sqlhub.processConnection = connectionForURI(conn_str)
+    print('Connected.\n')
 
-print 'Name: %s\nKey: %s\nDescription: %s\nDump Date: %s\nBase URL: %s\n' % (site_name, site_key, site_desc, dump_date, site_base_url)
+    # connect to solr
+    print('Connecting to solr...')
+    solr = Solr(settings.SOLR_URL)
+    # pysolr doesn't try to connect until a request is made, so we'll make a ping request
+    try:
+        solr._send_request('GET', '%s/admin/ping' % solr.path)
+    except socket.error, e:
+        print('Failed to connect to solr - error was: %s' % str(e))
+        print('Aborting.')
+        sys.exit(2)
+    print('Connected.\n')
 
-# the base URL is optional.
-if not (site_name and site_key and site_desc and dump_date):
-    print 'Could not get all the details for the site.'
-    print 'Use command-line parameters to specify the missing details (listed as None).'
-    sys.exit(1)
+    # ensure required tables exist
+    print("Creating tables if they don't exist...")
+    Site.createTable(ifNotExists=True)
+    Badge.createTable(ifNotExists=True)
+    Comment.createTable(ifNotExists=True)
+    User.createTable(ifNotExists=True)
+    print('Created.\n')
 
-# prevent importing sites with keys that clash with method names in the app,
-# e.g. a site key of 'search' would clash with the Stackdump-wide search page.
-if site_key in ('search', 'import', 'media', 'licenses'):
-    print 'The site key given, %s, is a reserved word in Stackdump.' % site_key
-    print 'Use the --site-key parameter to specify an alternate site key.'
-    sys.exit(2)
+    # SITE INFO
+    # only look if they were not specified at the command line; also only if
+    # readme.txt exists (they don't in dumps after Aug 2012)
+    readme_path = get_file_path(xml_root, 'readme.txt')
+    if not (site_name and dump_date) and readme_path:
+        # get the site name from the first line of readme.txt. This could be fragile.
+        with open(readme_path, 'r') as f:
+            site_readme_desc = f.readline().strip()
 
-# confirm site details with user to make sure we don't accidentally overwrite
-# another site.
-if not cmd_options.answer_yes:
-    confirm_prompt = 'Are these details correct (answer "yes" to proceed, anything else to abort)? '
-    confirm_answer = raw_input(confirm_prompt)
-    if confirm_answer != 'yes':
-        print 'Import aborted on user request.'
-        sys.exit(3)
+        # assume if there's a colon in the name, the name part is before, and the date
+        # part is after.
+        if ':' in site_readme_desc:
+            readme_site_name, readme_dump_date = site_readme_desc.split(':')
+            readme_site_name = readme_site_name.strip()
+            readme_dump_date = readme_dump_date.strip()
+        else:
+            readme_site_name = site_readme_desc
+            readme_dump_date = None
 
-# rollback any uncommitted entries in solr. Uncommitted entries may occur if
-# this import process is aborted. Solr doesn't have the concept of transactions
-# like databases do, so without a rollback, we'll be committing the previously
-# uncommitted entries plus the newly imported ones.
-#
-# This also means multiple dataproc processes cannot occur concurrently. If you 
-# do the import will be silently incomplete.
-print('Clearing any uncommitted entries in solr...')
-solr._update('<rollback />', waitFlush=None, waitSearcher=None)
-print('Cleared.\n')
+        # if the phrase ' - Data Dump' is in the readme site name, remove it
+        i = readme_site_name.rfind(' - Data Dump')
+        if i >= 0:
+            readme_site_name = readme_site_name[:i].strip()
 
-# check if site is already in database; if so, purge the data.
-site = list(Site.select(Site.q.key==site_key))
-if len(site) > 0:
-    site = site[0]
-    print('Deleting site "%s" from the database... ' % site.name)
-    sys.stdout.flush()
-    # Using SQLObject to delete rows takes too long, so we're going to do it directly
-    #Site.delete(site.id) # the relationship cascades, so other rows will be deleted
+        if not site_name:
+            site_name = readme_site_name
+        if not dump_date:
+            dump_date = readme_dump_date
+
+    # look for the site in the sites RSS file using the base_url with the id in RSS
+    # scrub the URL scheme off the base_url
+    if site_base_url:
+        # if there is no URL scheme, add one so it can be parsed by urllib2 so it
+        # can strip off other bits in the URL that we don't want
+        if '://' not in site_base_url:
+            site_base_url = 'http://%s' % site_base_url
+        site_base_url = urllib2.Request(site_base_url).get_host()
+
+    # attempt to get more information from the sites RSS cache
+    if site_base_url and not (site_name and site_desc and site_key):
+        sites_file_path = os.path.join(script_dir, '../../../../data/sites')
+        if os.path.exists(sites_file_path):
+            with open(sites_file_path) as f:
+                sites_file = ElementTree.parse(f)
+                entries = sites_file.findall('{http://www.w3.org/2005/Atom}entry')
+
+                for entry in entries:
+                    entry_base_url = entry.find('{http://www.w3.org/2005/Atom}id').text
+                    if '://' in entry_base_url:
+                        entry_base_url = urllib2.Request(entry_base_url).get_host()
+                    if site_base_url == entry_base_url:
+                        # this entry matches the detected site id
+                        if not site_key:
+                            # extract the key from the url
+                            rss_site_key = entry.find('{http://www.w3.org/2005/Atom}id').text
+                            # remove the URL scheme
+                            if '://' in rss_site_key:
+                                rss_site_key = rss_site_key[rss_site_key.find('://')+3:]
+                            # remove the TLD
+                            if rss_site_key.rfind('.') >= 0:
+                                rss_site_key = rss_site_key[:rss_site_key.rfind('.')]
+                            # remove the .stackexchange bit
+                            if '.stackexchange' in rss_site_key:
+                                rss_site_key = rss_site_key[:rss_site_key.find('.stackexchange')]
+
+                            site_key = rss_site_key
+
+                        if not site_name:
+                            site_name = entry.find('{http://www.w3.org/2005/Atom}title').text.strip()
+                        if not site_desc:
+                            site_desc = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
+
+    print 'Name: %s\nKey: %s\nDescription: %s\nDump Date: %s\nBase URL: %s\n' % (site_name, site_key, site_desc, dump_date, site_base_url)
+
+    # the base URL is optional.
+    if not (site_name and site_key and site_desc and dump_date):
+        print 'Could not get all the details for the site.'
+        print 'Use command-line parameters to specify the missing details (listed as None).'
+        sys.exit(1)
+
+    # prevent importing sites with keys that clash with method names in the app,
+    # e.g. a site key of 'search' would clash with the Stackdump-wide search page.
+    if site_key in ('search', 'import', 'media', 'licenses'):
+        print 'The site key given, %s, is a reserved word in Stackdump.' % site_key
+        print 'Use the --site-key parameter to specify an alternate site key.'
+        sys.exit(2)
+
+    # confirm site details with user to make sure we don't accidentally overwrite
+    # another site.
+    if not answer_yes:
+        confirm_prompt = 'Are these details correct (answer "yes" to proceed, anything else to abort)? '
+        confirm_answer = raw_input(confirm_prompt)
+        if confirm_answer != 'yes':
+            print 'Import aborted on user request.'
+            sys.exit(3)
+
+    # rollback any uncommitted entries in solr. Uncommitted entries may occur if
+    # this import process is aborted. Solr doesn't have the concept of transactions
+    # like databases do, so without a rollback, we'll be committing the previously
+    # uncommitted entries plus the newly imported ones.
+    #
+    # This also means multiple dataproc processes cannot occur concurrently. If you
+    # do the import will be silently incomplete.
+    print('Clearing any uncommitted entries in solr...')
+    solr._update('<rollback />', waitFlush=None, waitSearcher=None)
+    print('Cleared.\n')
+
+    # check if site is already in database; if so, purge the data.
+    site = list(Site.select(Site.q.key==site_key))
+    if len(site) > 0:
+        site = site[0]
+        print('Deleting site "%s" from the database... ' % site.name)
+        sys.stdout.flush()
+        # Using SQLObject to delete rows takes too long, so we're going to do it directly
+        #Site.delete(site.id) # the relationship cascades, so other rows will be deleted
+        sqlhub.threadConnection = sqlhub.processConnection.transaction()
+        conn = sqlhub.threadConnection
+        # these deletions are done in this order to avoid FK constraint issues
+        print('\tDeleting comments...')
+        conn.query(conn.sqlrepr(Delete(Comment.sqlmeta.table, where=(Comment.q.site==site))))
+        print('\tDeleting badges...')
+        conn.query(conn.sqlrepr(Delete(Badge.sqlmeta.table, where=(Badge.q.site==site))))
+        print('\tDeleting users...')
+        conn.query(conn.sqlrepr(Delete(User.sqlmeta.table, where=(User.q.site==site))))
+        print('\tDeleting site...')
+        conn.query(conn.sqlrepr(Delete(Site.sqlmeta.table, where=(Site.q.id==site.id))))
+        sqlhub.threadConnection.commit(close=True)
+        print('Deleted.\n')
+
+        print('Deleting site "%s" from the solr... ' % site.name)
+        solr.delete(q='siteKey:"%s"' % site.key, commit=False)
+        solr.commit(expungeDeletes=True)
+        print('Deleted.\n')
+
+    timing_start = time.time()
+
+    # start a new transaction
     sqlhub.threadConnection = sqlhub.processConnection.transaction()
     conn = sqlhub.threadConnection
-    # these deletions are done in this order to avoid FK constraint issues
-    print('\tDeleting comments...')
-    conn.query(conn.sqlrepr(Delete(Comment.sqlmeta.table, where=(Comment.q.site==site))))
-    print('\tDeleting badges...')
-    conn.query(conn.sqlrepr(Delete(Badge.sqlmeta.table, where=(Badge.q.site==site))))
-    print('\tDeleting users...')
-    conn.query(conn.sqlrepr(Delete(User.sqlmeta.table, where=(User.q.site==site))))
-    print('\tDeleting site...')
-    conn.query(conn.sqlrepr(Delete(Site.sqlmeta.table, where=(Site.q.id==site.id))))
+
+    # create a new Site
+    site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date,
+                import_date=datetime.now(), base_url=site_base_url)
+
+    # BADGES
+    # Processing of badges has been disabled because they don't offer any useful
+    # information in the offline situation.
+    #print('[badge] PARSING BADGES...')
+    #xml_path = get_file_path(xml_root, 'badges.xml')
+    #print('[badge] start parsing badges.xml...')
+    #handler = BadgeContentHandler(conn, site)
+    #xml.sax.parse(xml_path, handler)
+    #print('[badge]\tProcessed %d rows.' % (handler.row_count))
+    #print('[badge] FINISHED PARSING BADGES.\n')
+
+    # COMMENTS
+    # comments are temporarily stored in the database for retrieval when parsing
+    # posts only.
+    print('[comment] PARSING COMMENTS...')
+    xml_path = get_file_path(xml_root, 'comments.xml')
+    print('[comment] start parsing comments.xml...')
+    handler = CommentContentHandler(conn, site)
+    xml.sax.parse(xml_path, handler)
+    print('%-10s Processed %d rows.' % ('[comment]', handler.row_count))
+    print('[comment] FINISHED PARSING COMMENTS.\n')
+
+    # USERS
+    print('[user] PARSING USERS...')
+    xml_path = get_file_path(xml_root, 'users.xml')
+    print('[user] start parsing users.xml...')
+    handler = UserContentHandler(conn, site)
+    xml.sax.parse(xml_path, handler)
+    print('%-10s Processed %d rows.' % ('[user]', handler.row_count))
+    print('[user] FINISHED PARSING USERS.\n')
+
+    # POSTS
+    # posts are added directly to the Solr index; they are not added to the database.
+    print('[post] PARSING POSTS...')
+    xml_path = get_file_path(xml_root, 'posts.xml')
+    print('[post] start parsing posts.xml...')
+    handler = PostContentHandler(solr, site)
+    xml.sax.parse(xml_path, handler)
+    handler.commit_all_questions()
+    print('%-10s Processed %d rows.' % ('[post]', handler.row_count))
+
+    print('[post] FINISHED PARSING POSTS.\n')
+
+    # DELETE COMMENTS
+    print('[comment] DELETING COMMENTS FROM DATABASE (they are no longer needed)...')
+    conn.query(conn.sqlrepr(Delete(Comment.sqlmeta.table, where=(Comment.q.site == site))))
+    print('[comment] FINISHED DELETING COMMENTS.\n')
+
+    # commit transaction
+    print('COMMITTING IMPORTED DATA TO DISK...')
     sqlhub.threadConnection.commit(close=True)
-    print('Deleted.\n')
-    
-    print('Deleting site "%s" from the solr... ' % site.name)
-    solr.delete(q='siteKey:"%s"' % site.key, commit=False)
-    solr.commit(expungeDeletes=True)
-    print('Deleted.\n')
+    solr.commit()
+    print('FINISHED COMMITTING IMPORTED DATA TO DISK.\n')
 
-timing_start = time.time()
+    timing_end = time.time()
 
-# start a new transaction
-sqlhub.threadConnection = sqlhub.processConnection.transaction()
-conn = sqlhub.threadConnection
+    print('Time taken for site insertion into Stackdump: %f seconds.' % (timing_end - timing_start))
+    print('')
 
-# create a new Site
-site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date,
-            import_date=datetime.now(), base_url=site_base_url)
+# MAIN METHOD
+if __name__ == '__main__':
+    parser = OptionParser(usage='usage: %prog [options] xml_root_dir')
+    parser.add_option('-n', '--site-name', help='Name of the site.')
+    parser.add_option('-d', '--site-desc', help='Description of the site (if not in sites).')
+    parser.add_option('-k', '--site-key', help='Key of the site (if not in sites).')
+    parser.add_option('-c', '--dump-date', help='Dump date of the site.')
+    parser.add_option('-u', '--base-url', help='Base URL of the site on the web.')
+    parser.add_option('-Y', help='Answer yes to any confirmation questions.', dest='answer_yes', action='store_true', default=False)
 
-# BADGES
-# Processing of badges has been disabled because they don't offer any useful
-# information in the offline situation.
-#print('[badge] PARSING BADGES...')
-#xml_path = os.path.join(xml_root, 'badges.xml')
-#print('[badge] start parsing badges.xml...')
-#handler = BadgeContentHandler(site)
-#xml.sax.parse(xml_path, handler)
-#print('[badge]\tProcessed %d rows.' % (handler.row_count))
-#print('[badge] FINISHED PARSING BADGES.\n')
+    (cmd_options, cmd_args) = parser.parse_args()
 
-# COMMENTS
-# comments are temporarily stored in the database for retrieval when parsing
-# posts only. 
-print('[comment] PARSING COMMENTS...')
-xml_path = os.path.join(xml_root, 'comments.xml')
-print('[comment] start parsing comments.xml...')
-handler = CommentContentHandler(site)
-xml.sax.parse(xml_path, handler)
-print('%-10s Processed %d rows.' % ('[comment]', handler.row_count))
-print('[comment] FINISHED PARSING COMMENTS.\n')
+    if len(cmd_args) < 1:
+        print('The path to the directory containing the extracted XML files is required.')
+        sys.exit(1)
 
-# USERS
-print('[user] PARSING USERS...')
-xml_path = os.path.join(xml_root, 'users.xml')
-print('[user] start parsing users.xml...')
-handler = UserContentHandler(site)
-xml.sax.parse(xml_path, handler)
-print('%-10s Processed %d rows.' % ('[user]', handler.row_count))
-print('[user] FINISHED PARSING USERS.\n')
-
-# POSTS
-# posts are added directly to the Solr index; they are not added to the database.
-print('[post] PARSING POSTS...')
-xml_path = os.path.join(xml_root, 'posts.xml')
-print('[post] start parsing posts.xml...')
-handler = PostContentHandler(site)
-xml.sax.parse(xml_path, handler)
-handler.commit_all_questions()
-print('%-10s Processed %d rows.' % ('[post]', handler.row_count))
-
-print('[post] FINISHED PARSING POSTS.\n')
-
-# DELETE COMMENTS
-print('[comment] DELETING COMMENTS FROM DATABASE (they are no longer needed)...')
-conn.query(conn.sqlrepr(Delete(Comment.sqlmeta.table, where=(Comment.q.site == site))))
-print('[comment] FINISHED DELETING COMMENTS.\n')
-
-# commit transaction
-print('COMMITTING IMPORTED DATA TO DISK...')
-sqlhub.threadConnection.commit(close=True)
-solr.commit()
-print('FINISHED COMMITTING IMPORTED DATA TO DISK.\n')
-
-timing_end = time.time()
-
-print('Time taken for site insertion into Stackdump: %f seconds.' % (timing_end - timing_start))
-print('')
+    import_site(cmd_args[0], cmd_options.site_name, cmd_options.dump_date,
+                cmd_options.site_desc, cmd_options.site_key,
+                cmd_options.base_url, answer_yes=cmd_options.answer_yes)
