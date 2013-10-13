@@ -22,4 +22,4 @@ then
 fi
 
 cd $SCRIPT_DIR/java/solr/server
-$JAVA_CMD -server -Xmx2048M -XX:MaxPermSize=512M -jar start.jar
+$JAVA_CMD -Xmx2048M -XX:MaxPermSize=512M -jar start.jar
