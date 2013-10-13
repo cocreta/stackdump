@@ -8,4 +8,4 @@ then
     mkdir "$SCRIPT_DIR/data"
 fi
 
-$SCRIPT_DIR/start_python.sh $SCRIPT_DIR/python/src/stackdump/app.py
+"$SCRIPT_DIR/start_python.sh" "$SCRIPT_DIR/python/src/stackdump/app.py"
