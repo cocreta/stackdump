@@ -31,7 +31,7 @@ with open(sites_file_path) as f:
     entries = sites_file.findall('{http://www.w3.org/2005/Atom}entry')
     
     for entry in entries:
-        entry_title = entry.find('{http://www.w3.org/2005/Atom}title').text
+        entry_title = entry.find('{http://www.w3.org/2005/Atom}title').text.encode('ascii', 'ignore')
         
         # extract the key from the url - remove the http:// and .com
         site_key = entry.find('{http://www.w3.org/2005/Atom}id').text

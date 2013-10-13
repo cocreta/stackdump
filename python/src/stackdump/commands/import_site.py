@@ -689,7 +689,13 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
                         if not site_desc:
                             site_desc = entry.find('{http://www.w3.org/2005/Atom}summary').text.strip()
 
-    print 'Name: %s\nKey: %s\nDescription: %s\nDump Date: %s\nBase URL: %s\n' % (site_name, site_key, site_desc, dump_date, site_base_url)
+    print 'Name: %s\nKey: %s\nDescription: %s\nDump Date: %s\nBase URL: %s\n' % (
+        site_name.encode('ascii', 'ignore') if site_name else None, 
+        site_key, 
+        site_desc.encode('ascii', 'ignore') if site_desc else None, 
+        dump_date, 
+        site_base_url
+    )
 
     # the base URL is optional.
     if not (site_name and site_key and site_desc and dump_date):
