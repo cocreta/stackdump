@@ -47,6 +47,11 @@ Next, you should verify that the required Java and Python versions are accessibl
 
 Type @java -version@ and check that it is at least version 1.6.
 
+bq. If you're using Java 7 on Linux and you see an error similar to the following -
+@ Error: failed /opt/jre1.7.0_40/lib/i386/server/libjvm.so, because /opt/jre1.7.0_40/lib/i386/server/libjvm.so: cannot restore segment prot after reloc: Permission denied @
+this is because you have SELinux enabled. You will need to tell SELinux to allow Java to run by using the following command as root (amending the path as necessary) -
+@chcon -t textrel_shlib_t /opt/jre1.7.0_40/lib/i386/server/libjvm.so@
+
 Then type @python -V@ and check that it is version 2.5 or later (and not Python 3).
 
 If you would rather not put these versions in the PATH (e.g. you don't want to override the default version of Python in your Linux distribution), you can tell Stackdump which Java and/or Python to use explicitly by creating a file named @JAVA_CMD@ or @PYTHON_CMD@ respectively in the Stackdump root directory, and placing the path to the executable in there.
