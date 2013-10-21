@@ -17,7 +17,7 @@ from default_settings import *
 #SERVER_PORT = 8080
 
 # uncomment if the default host and port for Solr is different.
-#SOLR_URL = 'http://localhost:8983/solr/'
+#SOLR_URL = 'http://localhost:8983/solr/stackdump/'
 
 # uncomment if the database for Stackdump is not the default SQLite one
 #import os

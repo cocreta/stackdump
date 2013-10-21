@@ -15,7 +15,7 @@ SERVER_ADAPTER = 'cherrypy'
 SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8080
 
-SOLR_URL = 'http://localhost:8983/solr/'
+SOLR_URL = 'http://localhost:8983/solr/stackdump/'
 
 import os
 DATABASE_CONN_STR = 'sqlite://%s/../../../data/stackdump.sqlite' % os.path.dirname(__file__)

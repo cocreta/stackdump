@@ -602,7 +602,7 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     solr = Solr(settings.SOLR_URL)
     # pysolr doesn't try to connect until a request is made, so we'll make a ping request
     try:
-        solr._send_request('GET', '%s/admin/ping' % solr.path)
+        solr._send_request('GET', 'admin/ping')
     except socket.error, e:
         print('Failed to connect to solr - error was: %s' % str(e))
         print('Aborting.')

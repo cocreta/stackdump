@@ -30,9 +30,10 @@ Getting Started
 
 See the "example" directory for an example Solr setup.  A tutorial
 using the example setup can be found at
-http://lucene.apache.org/solr/tutorial.html
-or in in "docs/tutorial.html" in a binary distribution.
-
+   http://lucene.apache.org/solr/tutorial.html
+or linked from "docs/index.html" in a binary distribution.
+Also, there are Solr clients for many programming languages, see 
+   http://wiki.apache.org/solr/IntegratingSolr
 
 
 Files included in an Apache Solr binary distribution
@@ -44,42 +45,44 @@ example/
   Please see example/README.txt for information about running this
   example.
 
-dist/apache-solr-XX.war
+dist/solr-XX.war
   The Apache Solr Application.  Deploy this WAR file to any servlet
   container to run Apache Solr.
 
-dist/apache-solr-XX.jar
-  The Apache Solr Libraries.  This JAR file is needed to compile
-  Apache Solr Plugins (see http://wiki.apache.org/solr/SolrPlugins for
-  more information).
+dist/solr-<component>-XX.jar
+  The Apache Solr libraries.  To compile Apache Solr Plugins,
+  one or more of these will be required.  The core library is
+  required at a minimum. (see http://wiki.apache.org/solr/SolrPlugins
+  for more information).
 
 docs/index.html
-  The contents of the Apache Solr website.
-  
-docs/api/index.html
-  The Apache Solr Javadoc API documentation.
-
+  The Apache Solr Javadoc API documentation and Tutorial
 
 
 Instructions for Building Apache Solr from Source
 -------------------------------------------------
 
-1. Download the J2SE 5.0 JDK (Java Development Kit) or later from http://java.sun.com.
-   You will need the JDK installed, and the %JAVA_HOME%\bin directory included
-   on your command path.  To test this, issue a "java -version" command from your
-   shell and verify that the Java version is 5.0 or later.
+1. Download the Java SE 6 JDK (Java Development Kit) or later from http://java.sun.com/
+   You will need the JDK installed, and the $JAVA_HOME/bin (Windows: %JAVA_HOME%\bin) 
+   folder included on your command path. To test this, issue a "java -version" command 
+   from your shell (command prompt) and verify that the Java version is 1.6 or later.
 
-2. Download the Apache Ant binary distribution (1.7.x, not 1.6.x, not 1.8.x) from http://ant.apache.org.
-   You will need Ant installed and the %ANT_HOME%\bin directory included on your
-   command path.  To test this, issue a "ant -version" command from your
-   shell and verify that Ant is available.
+2. Download the Apache Ant binary distribution (1.8.2+) from 
+   http://ant.apache.org/  You will need Ant installed and the $ANT_HOME/bin (Windows: 
+   %ANT_HOME%\bin) folder included on your command path. To test this, issue a 
+   "ant -version" command from your shell (command prompt) and verify that Ant is 
+   available. 
 
-3. Download the Apache Solr distribution, linked from the above 
-   web site.  Expand the distribution to a folder of your choice, e.g. c:\solr.   
+   You will also need to install Apache Ivy binary distribution (2.2.0) from 
+   http://ant.apache.org/ivy/ and place ivy-2.2.0.jar file in ~/.ant/lib -- if you skip 
+   this step, the Solr build system will offer to do it for you.
+
+3. Download the Apache Solr distribution, linked from the above web site. 
+   Unzip the distribution to a folder of your choice, e.g. C:\solr or ~/solr
    Alternately, you can obtain a copy of the latest Apache Solr source code
    directly from the Subversion repository:
 
-     http://lucene.apache.org/solr/version_control.html
+     http://lucene.apache.org/solr/versioncontrol.html
 
 4. Navigate to the "solr" folder and issue an "ant" command to see the available options
    for building, testing, and packaging Solr.
