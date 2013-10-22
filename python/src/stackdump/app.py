@@ -32,7 +32,7 @@ from stackdump import settings
 # STATIC VARIABLES
 BOTTLE_ROOT = os.path.abspath(os.path.dirname(sys.argv[0]))
 MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
-SE_QUESTION_ID_RE = re.compile(r'/questions/(?P<id>\d+)/')
+SE_QUESTION_ID_RE = re.compile(r'/(questions|q)/(?P<id>\d+)/')
 SE_ANSWER_ID_RE = re.compile(r'/a/(?P<id>\d+)/')
 
 # THREAD LOCAL VARIABLES
