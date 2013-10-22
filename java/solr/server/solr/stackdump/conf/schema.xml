@@ -121,6 +121,8 @@
    <field name="title" type="text_general" indexed="true" stored="false" required="true"/>
    <field name="question-json" type="string" indexed="false" stored="true" required="true"/>
    <field name="answers-json" type="string" indexed="false" stored="true" multiValued="true"/>
+   <!-- used for reverse question ID lookup from an answer -->
+   <field name="answerId" type="tint" indexed="true" stored="false" multiValued="true"/>
    <field name="ownerUserId" type="tint" indexed="true" stored="true" required="true"/>
    <field name="lastEditorUserId" type="tint" indexed="false" stored="false"/>
    <field name="lastActivityDate" type="tdate" indexed="true" stored="false"/>

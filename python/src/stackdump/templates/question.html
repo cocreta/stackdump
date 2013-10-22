@@ -99,7 +99,8 @@ MathJax.Hub.Config({
             <h1 class="answers">{{ r.answers|length }} answer{% if r.answers|length != 1 %}s{% endif %}</h1>
             <ul class="answers">
                 {% for a in r.answers %}
-                <li>
+                <li id="answer-{{ a.id }}">
+                    <a name="answer-{{ a.id }}"></a>
                     <div class="post-stats-vertical">
                         <div class="post-stat">
                             <p class="post-stat-value {% if a.score < 0 %}post-stat-value-poor{% endif %}">
@@ -130,6 +131,9 @@ MathJax.Hub.Config({
                             {{ macros.user_card(a.lastEditorUser) }}
                         </div>
                         {% endif %}
+                        <div class="post-actions">
+                            <a href="{{ SETTINGS.APP_URL_ROOT }}{{ r.site.key }}/a/{{ a.id }}">permalink</a>
+                        </div>
                         <div class="post-tags">
                             {% for t in a.tags %}
                             <span class="label">{{ t }}</span>
@@ -162,5 +166,15 @@ MathJax.Hub.Config({
             $('pre code').each(function(index, value) { $(value).addClass('prettyprint');});
             prettyPrint();
         });
+
+        {% if answer_id %}
+        // scroll to a particular answer when answer ID given in URL
+        $(document).ready(function() {
+            $('html, body').animate({
+                // minus 20 to add a bit of padding at the top of the window
+                scrollTop: $('#answer-{{ answer_id }}').offset().top - 20
+            }, 1000);
+        });
+        {% endif %}
     </script>
 {% endblock %}

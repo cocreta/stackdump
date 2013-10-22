@@ -33,6 +33,7 @@ from stackdump import settings
 BOTTLE_ROOT = os.path.abspath(os.path.dirname(sys.argv[0]))
 MEDIA_ROOT = os.path.abspath(BOTTLE_ROOT + '/../../media')
 SE_QUESTION_ID_RE = re.compile(r'/questions/(?P<id>\d+)/')
+SE_ANSWER_ID_RE = re.compile(r'/a/(?P<id>\d+)/')
 
 # THREAD LOCAL VARIABLES
 thread_locals = threading.local()
@@ -371,10 +372,11 @@ def site_search(site_key):
     return render_template('site_results.html', context)
 
 @get('/:site_key#[\w\.]+#/:question_id#\d+#')
+@get('/:site_key#[\w\.]+#/:question_id#\d+#/:answer_id#\d+#')
 @uses_templates
 @uses_solr
 @uses_db
-def view_question(site_key, question_id):
+def view_question(site_key, question_id, answer_id=None):
     context = { }
     
     try:
@@ -397,6 +399,8 @@ def view_question(site_key, question_id):
     rewrite_result(result)
     sort_answers(result)
     context['result'] = result
+
+    context['answer_id'] = answer_id
     
     return render_template('question.html', context)
 
@@ -407,6 +411,28 @@ def view_question_redirect(site_key, question_id):
     by Stackdump.
     '''
     redirect('%s%s/%s' % (settings.APP_URL_ROOT, site_key, question_id))
+
+@get('/:site_key#[\w\.]+#/a/:answer_id#\d+#')
+@uses_templates
+@uses_solr
+@uses_db
+def view_answer(site_key, answer_id):
+    context = { }
+    
+    try:
+        context['site'] = Site.selectBy(key=site_key).getOne()
+    except SQLObjectNotFound:
+        raise HTTPError(code=404, output='No site exists with the key %s.' % site_key)
+    
+    # get the question referenced by this answer id
+    query = 'answerId:%s siteKey:%s' % (answer_id, site_key)
+    results = solr_conn().search(query)
+    if len(results) == 0:
+        raise HTTPError(code=404, output='No answer exists with the ID %s for the site, %s.' % (answer_id, context['site'].name))
+    
+    question_id = results.docs[0]['id']
+
+    redirect('%s%s/%s/%s' % (settings.APP_URL_ROOT, site_key, question_id, answer_id))
 
 # END WEB REQUEST METHODS
 
@@ -794,6 +820,14 @@ def _rewrite_html(html, app_url_root, sites_by_urls):
                 if question_id:
                     question_id = question_id.groupdict()['id']
                     url = '%s%s/%s' % (app_url_root, site.key, question_id)
+                    t.set('href', url)
+                    t.set('class', t.get('class', '') + ' internal-link')
+                    internal_link = True
+                
+                answer_id = SE_ANSWER_ID_RE.search(url)
+                if answer_id:
+                    answer_id = answer_id.groupdict()['id']
+                    url = '%s%s/a/%s' % (app_url_root, site.key, answer_id)
                     t.set('href', url)
                     t.set('class', t.get('class', '') + ' internal-link')
                     internal_link = True

@@ -207,8 +207,12 @@ h3, h4, h5, h6 {
     float: right;
 }
 
-.post-tags {
+.post-tags, .post-actions {
     margin-bottom: 10px;
+}
+
+.post-actions a {
+    color: #999999;
 }
 
 .question h1 {

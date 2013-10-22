@@ -462,6 +462,7 @@ class PostContentHandler(xml.sax.ContentHandler):
         doc['votes'] = q['score']
         doc['viewCount'] = q['viewCount']
         doc['title'] = q['title']
+        doc['answerId'] = [ str(a['id']) for a in q['answers'] ]
         doc['ownerUserId'] = q['ownerUserId']
         if 'lastEditorUserId' in q:
             doc['lastEditorUserId'] = q['lastEditorUserId']
