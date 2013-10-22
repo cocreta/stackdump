@@ -17,8 +17,8 @@ testsuite/.*$
 tutorial/.*$
 
 # Solr/Jetty
-^java/solr/server/work/.*
-^java/solr/server/solr/data/.*
+^java/solr/server/solr-webapp/.*
+^java/solr/server/logs/.*
 
 # ignore the downloaded logos
 ^python/media/images/logos/.*
