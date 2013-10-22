@@ -22,6 +22,12 @@ It is recommended that Stackdump be run on a system with at least 3GB of RAM, pa
 
 Finally, Stackdump has been tested and works in the latest browsers (IE9, FF10+, Chrome, Safari). It degrades fairly gracefully in older browsers, although some will have rendering issues, e.g. IE8.
 
+h2. Changes and upgrading to v1.1
+
+Version 1.1 fixes a few bugs, the major one being the inability to import the 2013 data dumps due to changes in the case of the filenames. It also adds a couple of minor features, including support for resolving and rewriting short question and answer permalinks.
+
+Because changes have been made to the search schema and the search indexer has been upgraded (to Solr 4.5), all data will need to be re-indexed. Therefore there is no upgrade path; follow the instructions below to set up Stackdump again. It is recommended to install this new version in a new directory, instead of overwriting the existing one.
+
 h2. Setting up
 
 Stackdump was designed for offline environments or environments with poor internet access, therefore it is bundled with all the dependencies it requires (with the exception of Python, Java and 7-zip). 
