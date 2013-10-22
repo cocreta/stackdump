@@ -20,7 +20,7 @@ from bottle import get, run, static_file, debug, request, error, HTTPError, redi
 from jinja2 import Environment, PackageLoader
 from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObjectNotFound
 from sqlobject.dberrors import OperationalError
-from pysolr import Solr
+from pysolr import Solr, SolrError
 import iso8601
 import html5lib
 from html5lib.filters._base import Filter as HTML5LibFilterBase
@@ -257,7 +257,21 @@ def error500(error):
         # not running. Show a nice error message.
         if ex.errno == 111:
             return render_template('solrnotrunning.html')
-    
+    if isinstance(ex, SolrError):
+        # if the error is a Solr error, it is likely a syntax issue
+        try:
+            # the error is a string, so try parsing it
+            # format seems to be "[Reason: blah]\n{"error":{"code":400...}}"
+            reason, error_json = ex.message.split('\n')
+            error_json = json.loads(error_json)
+            if error_json['error']['code'] == 400:
+                return render_template('badsolrsyntax.html', { 
+                    'reason' : reason,
+                    'error' : error_json
+                })
+        except Exception:
+            pass
+ 
     # otherwise, return the standard error message
     if not settings.DEBUG:
         try:
