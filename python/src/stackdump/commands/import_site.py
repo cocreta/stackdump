@@ -12,15 +12,17 @@ from datetime import datetime
 import re
 import urllib2
 import socket
+import tempfile
 from optparse import OptionParser
 from xml.etree import ElementTree
 
-from sqlobject import sqlhub, connectionForURI, AND, OR, IN, SQLObject
+from sqlobject import sqlhub, connectionForURI, AND, IN, SQLObject, \
+    UnicodeCol, DateTimeCol, IntCol, DatabaseIndex, dbconnection
 from sqlobject.sqlbuilder import Delete, Insert
 from sqlobject.styles import DefaultStyle
 from pysolr import Solr
 
-from stackdump.models import Site, Badge, Comment, User
+from stackdump.models import Site, Badge, User
 from stackdump import settings
 
 try:
@@ -342,8 +344,9 @@ class PostContentHandler(xml.sax.ContentHandler):
         if self.row_count % 1000 == 0:
             print('%-10s Processed %d rows.' % ('[post]', self.row_count))
         
-        # only check for finished questions every 1000 rows to speed things up
-        if self.row_count % 1000 == 0:
+        # only check for finished questions every 10000 rows to speed things up
+        if self.row_count % 10000 == 0:
+            print('Committing complete questions...')
             self.commit_finished_questions()
     
     def commit_finished_questions(self):
@@ -551,6 +554,25 @@ class PostContentHandler(xml.sax.ContentHandler):
         for question_id, answers in self.orphan_answers.items():
             print('There are %d answers for missing question [ID# %d]. Ignoring orphan answers.' % (len(answers), question_id))
 
+
+# TEMP COMMENT DATABASE DEFINITION
+comment_db_sqlhub = dbconnection.ConnectionHub()
+class Comment(SQLObject):
+    sourceId = IntCol()
+    site = IntCol()
+    postId = IntCol()
+    score = IntCol()
+    text = UnicodeCol()
+    creationDate = DateTimeCol()
+    userId = IntCol()
+
+    siteId_postId_index = DatabaseIndex(site, postId)
+
+    _connection = comment_db_sqlhub
+
+    json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
+
+
 # METHODS
 def get_file_path(dir_path, filename):
     """
@@ -593,7 +615,7 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
         sys.exit(1)
 
     # connect to the database
-    print('Connecting to the database...')
+    print('Connecting to the Stackdump database...')
     conn_str = settings.DATABASE_CONN_STR
     sqlhub.processConnection = connectionForURI(conn_str)
     print('Connected.\n')
@@ -614,7 +636,6 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     print("Creating tables if they don't exist...")
     Site.createTable(ifNotExists=True)
     Badge.createTable(ifNotExists=True)
-    Comment.createTable(ifNotExists=True)
     User.createTable(ifNotExists=True)
     print('Created.\n')
 
@@ -742,8 +763,6 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
         sqlhub.threadConnection = sqlhub.processConnection.transaction()
         conn = sqlhub.threadConnection
         # these deletions are done in this order to avoid FK constraint issues
-        print('\tDeleting comments...')
-        conn.query(conn.sqlrepr(Delete(Comment.sqlmeta.table, where=(Comment.q.site==site))))
         print('\tDeleting badges...')
         conn.query(conn.sqlrepr(Delete(Badge.sqlmeta.table, where=(Badge.q.site==site))))
         print('\tDeleting users...')
@@ -758,11 +777,23 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
         solr.commit(expungeDeletes=True)
         print('Deleted.\n')
 
+    # create the temporary comments database
+    print('Connecting to the temporary comments database...')
+    temp_db_file, temp_db_path = tempfile.mkstemp('.sqlite', 'temp_comment_db-' + site_name.replace('.', '_'), settings.TEMP_COMMENTS_DATABASE_DIR)
+    temp_db_file.close()
+    conn_str = 'sqlite://' + temp_db_path
+    comment_db_sqlhub.processConnection = connectionForURI(conn_str)
+    print('Connected.\n')
+    Comment.createTable()
+    print('Schema created.\n')
+
     timing_start = time.time()
 
     # start a new transaction
     sqlhub.threadConnection = sqlhub.processConnection.transaction()
     conn = sqlhub.threadConnection
+    comment_db_sqlhub.threadConnection = comment_db_sqlhub.processConnection.transaction()
+    temp_db_conn = comment_db_sqlhub.threadConnection
 
     # create a new Site
     site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date,
@@ -785,7 +816,7 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     print('[comment] PARSING COMMENTS...')
     xml_path = get_file_path(xml_root, 'comments.xml')
     print('[comment] start parsing comments.xml...')
-    handler = CommentContentHandler(conn, site)
+    handler = CommentContentHandler(temp_db_conn, site)
     xml.sax.parse(xml_path, handler)
     print('%-10s Processed %d rows.' % ('[comment]', handler.row_count))
     print('[comment] FINISHED PARSING COMMENTS.\n')
@@ -812,8 +843,10 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     print('[post] FINISHED PARSING POSTS.\n')
 
     # DELETE COMMENTS
-    print('[comment] DELETING COMMENTS FROM DATABASE (they are no longer needed)...')
-    conn.query(conn.sqlrepr(Delete(Comment.sqlmeta.table, where=(Comment.q.site == site))))
+    print('[comment] DELETING TEMPORARY COMMENTS DATABASE (they are no longer needed)...')
+    temp_db_conn.commit(close=True)
+    comment_db_sqlhub.processConnection.close()
+    os.remove(temp_db_path)
     print('[comment] FINISHED DELETING COMMENTS.\n')
 
     # commit transaction

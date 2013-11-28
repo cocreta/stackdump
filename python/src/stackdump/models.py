@@ -15,6 +15,7 @@ class Site(SQLObject):
     
     siteKey_index = DatabaseIndex(key, unique=True)
 
+
 class Badge(SQLObject):
     sourceId = IntCol()
     site = ForeignKey('Site', cascade=True)
@@ -22,18 +23,6 @@ class Badge(SQLObject):
     name = UnicodeCol()
     date = DateTimeCol()
 
-class Comment(SQLObject):
-    sourceId = IntCol()
-    site = ForeignKey('Site', cascade=True)
-    postId = IntCol()
-    score = IntCol()
-    text = UnicodeCol()
-    creationDate = DateTimeCol()
-    userId = IntCol()
-    
-    siteId_postId_index = DatabaseIndex(site, postId)
-    
-    json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
 
 class User(SQLObject):
     sourceId = IntCol()
