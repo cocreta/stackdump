@@ -566,6 +566,8 @@ class Comment(SQLObject):
     creationDate = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
     userId = IntCol()
 
+    siteId_postId_index = DatabaseIndex(siteId, postId)
+
     _connection = comment_db_sqlhub
 
     json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
