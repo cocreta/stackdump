@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Stackdump // Site import in progress
+{% endblock %}
+
+{% block body %}
+    <div class="row importinprogress">
+        <div class="span16">
+            <h1>Stackdump is currently importing a StackExchange site.</h1>
+            <p>
+                Stackdump is temporarily disabled while a StackExchange site is
+                being imported. It will automatically become available again
+                once the import process has completed. This should take no
+                longer than 12 hours.
+            </p>
+            
+            <p class="subinfo">
+                If this message is appearing and no site is currently being
+                imported, then check the Stackdump web log and ensure Stackdump
+                has access to the configured database.
+            </p>
+            
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Stackdump - Import data instructions
+{% endblock %}
+
+{% block body %}
+    <div class="row nodata">
+        <div class="span16">
+            <h1>No data has been imported... yet.</h1>
+            <p>
+                Before you can start using Stackdump, you need to import some
+                <a href="http://www.stackexchange.com">StackExchange</a> data
+                into it. To do this, you'll need to download the StackExchange
+                data dump, then run some scripts on the Stackdump server.
+            </p>
+            
+            {% include 'includes/import_data.html.inc' %}
+            
+        </div>
+    </div>
+{% endblock %}

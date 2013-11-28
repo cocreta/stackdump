@@ -1,0 +1,51 @@
+{% macro user_card(user) %}
+<div class="user-card">
+    {% if user == None %}
+    <p class="user-name"><em title="This user account has since been deleted from the site.">Anonymous User</em></p>
+    {% else %}
+    <p class="user-rep">{{ user.reputation }}</p>
+    <p class="user-name">
+        {% if user.site.base_url %}
+        <span title="StackExchange user profile URL: http://{{ user.site.base_url }}/users/{{ user.sourceId }}">{{ user.displayName }}</span>
+        {% else %}
+        {{ user.displayName }}
+        {% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro user_name(user) %}
+{% if user == None %}
+<em title="This user account has since been deleted from the site.">Anonymous User</em>
+{% else %}
+{% if user.site.base_url %}
+<span title="StackExchange user profile URL: http://{{ user.site.base_url }}/users/{{ user.sourceId }}">{{ user.displayName }}</span>
+{% else %}
+{{ user.displayName }}
+{% endif %}
+{% endif %}
+{% endmacro %}
+
+{% macro render_comments(p, default_comments_max) %}
+<ul>
+    {% for c in p.comments %}
+    <li {% if loop.index > default_comments_max %}class="hidden-comment"{% endif %}>
+        {% if c.score > 0 %}
+        <p class="post-comment-score">{{ c.score }}</p>
+        {% endif %}
+        <div class="post-comment-text">
+            {{ c.text|safe }} &mdash;
+            <span class="post-comment-metadata">
+                <strong>{{ user_name(c.user) }}</strong> on
+                <strong>{{ c.creationDate|format_datetime }}</strong>
+            </span>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% if p.comments|length > default_comments_max %}
+{% set additional_comments = p.comments|length - default_comments_max %}
+<div class="show-comments"><a href="#">show <strong>{{ additional_comments }}</strong> more comment{% if additional_comments != 1 %}s{% endif %}...</a></div>
+{% endif %}
+{% endmacro %}

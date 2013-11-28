@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Stackdump search for "{{ query }}"{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="span16">
+            <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}search">
+                <input type="text" class="xlarge" name="q" value="{{ query }}" />
+                <input type="hidden" name="s" value="{{ sort_by }}" />
+                <input type="submit" class="btn primary" value="Search" />
+            </form>
+            
+            <ul class="tabs">
+                <li {% if sort_by == 'newest' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=newest', 'p=0') }}">newest</a></li>
+                <li {% if sort_by == 'votes' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=votes', 'p=0') }}">votes</a></li>
+                <li {% if sort_by == 'relevance' %}class="active"{% endif %}><a href="{{ REQUEST.url|set_get_parameters('s=relevance', 'p=0') }}">relevance</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="span12">
+        {% include 'includes/results.html.inc' %}
+        </div>
+        <div class="span4">
+            <div class="total-hits">
+                <p>
+                    <span class="stat-value">{{ total_hits }}</span>
+                </p>
+                <p>
+                    questions matched your query <em>"{{ query }}"</em>.
+                </p>
+            </div>
+            
+            <div class="well site-list-container">
+                <h3>Narrow by site</h3>
+                <ul class="site-list">
+                    {% for s in sites %}
+                    <li>
+                        <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ s.key }}.png" alt="{{ s.name }} logo" />
+                        <h6>
+                            <a href="{{ SETTINGS.APP_URL_ROOT }}{{ s.key }}/search?q={{ query }}&amp;s={{ sort_by }}">{{ s.name }}</a>
+                            <small class="tagline">{{ s.dump_date }}</small>
+                        </h6>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}

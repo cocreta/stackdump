@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Stackdump // Import data instructions
+{% endblock %}
+
+{% block body %}
+    <div class="row nodata">
+        <div class="span16">
+            <h1>Importing data into Stackdump</h1>
+            <p>
+                Use the procedure below to import new sites into this Stackdump
+                instance, or to upgrade the content to a later version.
+            </p>
+            <p>
+                If you are upgrading, just follow the steps below. There are no
+                special steps to perform for upgrades; the process below will
+                automatically remove the existing site and import the new
+                version.
+            </p>
+            
+            {% include 'includes/import_data.html.inc' %}
+            
+        </div>
+    </div>
+{% endblock %}

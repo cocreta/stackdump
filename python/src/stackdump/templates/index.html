@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if site %}
+Stackdump // {{ site.name }} Home
+{% else %}
+Stackdump Home
+{% endif %}
+{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="span12">
+            <div class="search-container">
+                {% if site %}
+                <img class="site-logo" src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ site.key }}.png" alt="{{ site.name }} logo" />
+                <h1 class="site-title">
+                    {{ site.name }}
+                    <small class="tagline">{{ site.desc }}</small>
+                </h1>
+                {% else %}
+                <h1>
+                    Welcome to Stackdump,
+                    <small class="tagline">the offline browser for StackExchange sites.</small>
+                </h1>
+                {% endif %}
+                <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}{% if site %}{{ site.key }}/{% endif %}search">
+                    <input type="text" class="xlarge" name="q" />
+                    <input type="submit" class="btn primary" value="Search" />
+                </form>
+            </div>
+            
+            <div class="random-questions-container">
+                <h3>Random questions</h3>
+                {% set results = random_questions %}
+                {% include 'includes/results.html.inc' %}
+            </div>
+        </div>
+        <div class="span4">
+            <div class="well site-list-container">
+                <h3>Available sites</h3>
+                <ul class="site-list">
+                    {% for s in sites %}
+                    <li>
+                        <img src="{{ SETTINGS.APP_URL_ROOT }}media/logos/{{ s.key }}.png" alt="{{ s.name }} logo" />
+                        <h6>
+                            <a href="{{ SETTINGS.APP_URL_ROOT }}{{ s.key }}/">{{ s.name }}</a>
+                            <small class="tagline">{{ s.dump_date }}</small>
+                        </h6>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div> 
+{% endblock %}
