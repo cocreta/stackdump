@@ -566,7 +566,7 @@ class Comment(SQLObject):
     creationDate = DateTimeCol()
     userId = IntCol()
 
-    siteId_postId_index = DatabaseIndex(site, postId)
+    siteId_postId_index = DatabaseIndex(siteId, postId)
 
     _connection = comment_db_sqlhub
 
