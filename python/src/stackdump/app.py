@@ -26,7 +26,7 @@ import html5lib
 from html5lib.filters._base import Filter as HTML5LibFilterBase
 import markdown
 
-from stackdump.models import Site, Badge, Comment, User
+from stackdump.models import Site, Badge, User
 from stackdump import settings
 
 # STATIC VARIABLES
