@@ -346,7 +346,7 @@ class PostContentHandler(xml.sax.ContentHandler):
         
         # only check for finished questions every 10000 rows to speed things up
         if self.row_count % 10000 == 0:
-            print('Committing complete questions...')
+            print('Committing completed questions...')
             self.commit_finished_questions()
     
     def commit_finished_questions(self):
@@ -779,11 +779,11 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
 
     # create the temporary comments database
     print('Connecting to the temporary comments database...')
-    temp_db_file, temp_db_path = tempfile.mkstemp('.sqlite', 'temp_comment_db-' + site_name.replace('.', '_'), settings.TEMP_COMMENTS_DATABASE_DIR)
+    temp_db_file, temp_db_path = tempfile.mkstemp('.sqlite', 'temp_comment_db-' + re.sub(r'[^\w]', '_', site_key), settings.TEMP_COMMENTS_DATABASE_DIR)
     os.close(temp_db_file)
     conn_str = 'sqlite://' + temp_db_path
     comment_db_sqlhub.processConnection = connectionForURI(conn_str)
-    print('Connected.\n')
+    print('Connected.')
     Comment.createTable()
     print('Schema created.\n')
 
