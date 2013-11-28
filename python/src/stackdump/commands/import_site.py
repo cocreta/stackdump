@@ -137,7 +137,7 @@ class CommentContentHandler(BaseContentHandler):
             return
         
         try:
-            d = self.cur_props = { 'site' : self.site }
+            d = self.cur_props = { 'siteId' : self.site.id }
             d['sourceId'] = int(attrs['Id'])
             d['postId'] = int(attrs.get('PostId', 0))
             d['score'] = int(attrs.get('Score', 0))
@@ -403,7 +403,7 @@ class PostContentHandler(xml.sax.ContentHandler):
             post_ids.add(a['id'])
         
         # get the comments
-        comment_objs = Comment.select(AND(Comment.q.site == self.site,
+        comment_objs = Comment.select(AND(Comment.q.siteId == self.site.id,
                                           IN(Comment.q.postId, list(post_ids))))
         
         # sort the comments out into a dict keyed on the post id
@@ -559,7 +559,7 @@ class PostContentHandler(xml.sax.ContentHandler):
 comment_db_sqlhub = dbconnection.ConnectionHub()
 class Comment(SQLObject):
     sourceId = IntCol()
-    site = IntCol()
+    siteId = IntCol()
     postId = IntCol()
     score = IntCol()
     text = UnicodeCol()
