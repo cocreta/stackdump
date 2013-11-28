@@ -22,3 +22,6 @@ tutorial/.*$
 
 # ignore the downloaded logos
 ^python/media/images/logos/.*
+
+# PyCharm project files
+^.idea/
