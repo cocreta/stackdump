@@ -600,7 +600,7 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
 
     # connect to solr
     print('Connecting to solr...')
-    solr = Solr(settings.SOLR_URL)
+    solr = Solr(settings.SOLR_URL, assume_clean=True)
     # pysolr doesn't try to connect until a request is made, so we'll make a ping request
     try:
         solr._send_request('GET', 'admin/ping')
