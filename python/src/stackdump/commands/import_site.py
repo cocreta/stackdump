@@ -110,7 +110,7 @@ class BadgeContentHandler(BaseContentHandler):
             d['sourceId'] = int(attrs['Id'])
             d['userId'] = int(attrs.get('UserId', 0))
             d['name'] = attrs.get('Name', '')
-            d['date'] = datetime.strptime(attrs.get('Date'), ISO_DATE_FORMAT)
+            d['date'] = attrs.get('Date')
         except Exception, e:
             # could not parse this, so ignore the row completely
             self.cur_props = None
@@ -256,10 +256,10 @@ class UserContentHandler(BaseContentHandler):
             d = self.cur_props = { 'site' : self.site }
             d['sourceId'] = int(attrs['Id'])
             d['reputation'] = int(attrs.get('Reputation', 0))
-            d['creationDate'] = datetime.strptime(attrs.get('CreationDate'), ISO_DATE_FORMAT)
+            d['creationDate'] = attrs.get('CreationDate')
             d['displayName'] = attrs.get('DisplayName', '')
             d['emailHash'] = attrs.get('EmailHash', '')
-            d['lastAccessDate'] = datetime.strptime(attrs.get('LastAccessDate'), ISO_DATE_FORMAT)
+            d['lastAccessDate'] = attrs.get('LastAccessDate')
             d['websiteUrl'] = attrs.get('WebsiteUrl', '')
             d['location'] = attrs.get('Location', '')
             d['age'] = int(attrs.get('Age', 0))
@@ -639,8 +639,6 @@ class Comment(SQLObject):
     creationDate = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
     userId = IntCol()
 
-    siteId_postId_index = DatabaseIndex(siteId, postId)
-
     _connection = comment_db_sqlhub
 
     json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
@@ -678,6 +676,9 @@ def get_file_path(dir_path, filename):
 
     return os.path.abspath(os.path.join(dir_path, matches[0]))
 
+def create_comment_indices(conn):
+    # (site_id, post_id) index
+    conn.execute('CREATE INDEX IF NOT EXISTS comment_siteId_postId_index ON comment (site_id, post_id)')
 
 def import_site(xml_root, site_name, dump_date, site_desc, site_key,
                 site_base_url, answer_yes=False):
@@ -858,7 +859,10 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     comment_db_sqlhub.processConnection = connectionForURI(conn_str)
     print('Connected.')
     Comment.createTable()
-    print('Schema created.\n')
+    print('Schema created.')
+    comment_db_sqlhub.processConnection.getConnection().execute('PRAGMA synchronous = OFF')
+    comment_db_sqlhub.processConnection.getConnection().execute('PRAGMA journal_mode = MEMORY')
+    print('Pragma configured.\n')
 
     timing_start = time.time()
 
@@ -891,6 +895,8 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     xml.sax.parse(xml_path, handler)
     handler.commit_comments_batch()
     print('%-10s Processed %d rows.' % ('[comment]', handler.row_count))
+    print('[comment] creating database indices...')
+    create_comment_indices(comment_db_sqlhub.processConnection.getConnection())
     print('[comment] FINISHED PARSING COMMENTS.\n')
 
     # USERS

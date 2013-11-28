@@ -5,6 +5,10 @@
 from sqlobject import SQLObject, UnicodeCol, DateTimeCol, IntCol, ForeignKey, \
                       DatabaseIndex
 
+
+ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+
+
 class Site(SQLObject):
     name = UnicodeCol()
     desc = UnicodeCol()
@@ -21,17 +25,17 @@ class Badge(SQLObject):
     site = ForeignKey('Site', cascade=True)
     userId = IntCol()
     name = UnicodeCol()
-    date = DateTimeCol()
+    date = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
 
 
 class User(SQLObject):
     sourceId = IntCol()
     site = ForeignKey('Site', cascade=True)
     reputation = IntCol()
-    creationDate = DateTimeCol()
+    creationDate = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
     displayName = UnicodeCol()
     emailHash = UnicodeCol()
-    lastAccessDate = DateTimeCol()
+    lastAccessDate = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
     websiteUrl = UnicodeCol()
     location = UnicodeCol()
     age = IntCol()
