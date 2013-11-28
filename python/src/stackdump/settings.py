@@ -19,9 +19,10 @@ from default_settings import *
 # uncomment if the default host and port for Solr is different.
 #SOLR_URL = 'http://localhost:8983/solr/stackdump/'
 
-# uncomment if the database for Stackdump is not the default SQLite one
-#import os
-#DATABASE_CONN_STR = 'sqlite://%s/../../../data/stackdump.sqlite' % os.path.dirname(__file__)
+# uncomment if the database for Stackdump is not the default SQLite one or you
+# wish to have the database at a different path to the stackdump_root/data
+# directory
+#DATABASE_CONN_STR = 'sqlite:///' + path_to_the_database
 
 # if the website is hosted under a subpath, specify it here. It must end with a
 # slash.
