@@ -18,7 +18,7 @@ SERVER_PORT = 8080
 SOLR_URL = 'http://localhost:8983/solr/stackdump/'
 
 import os
-DATABASE_CONN_STR = 'sqlite://%s/../../../data/stackdump.sqlite' % os.path.dirname(__file__)
+DATABASE_CONN_STR = 'sqlite:///' + os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'stackdump.sqlite')
 
 # if the website is hosted under a subpath, specify it here. It must end with a
 # slash.
