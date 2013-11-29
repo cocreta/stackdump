@@ -16,10 +16,10 @@ SERVER_HOST = '0.0.0.0'
 SERVER_PORT = 8080
 
 SOLR_URL = 'http://localhost:8983/solr/stackdump/'
+SOLR_COMMENTS_URL = 'http://localhost:8983/solr/stackdump-comments/'
 
 import os
 DATABASE_CONN_STR = 'sqlite:///' + os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'stackdump.sqlite')
-TEMP_COMMENTS_DATABASE_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data')
 
 # if the website is hosted under a subpath, specify it here. It must end with a
 # slash.

@@ -119,7 +119,7 @@ class BadgeContentHandler(BaseContentHandler):
             traceback.print_exc()
             print('Could not parse the row ' + repr(attrs))
 
-class CommentContentHandler(BaseContentHandler):
+class CommentContentHandler(xml.sax.ContentHandler):
     """
     Parses the string -
     
@@ -129,20 +129,25 @@ class CommentContentHandler(BaseContentHandler):
             key. " CreationDate="2010-05-19T23:48:05.680" UserId="23" />
 
     """
-    def __init__(self, conn, site):
-        BaseContentHandler.__init__(self, conn, site, Comment)
+    def __init__(self, solr, site):
+        self.solr = solr
+        self.site = site
+        self.cur_batch = [ ]
+        self.cur_props = None
+        self.row_count = 0
     
     def startElement(self, name, attrs):
         if name != 'row':
             return
         
         try:
-            d = self.cur_props = { 'siteId' : self.site.id }
-            d['sourceId'] = int(attrs['Id'])
+            d = self.cur_props = { 'siteKey' : self.site.key }
+            d['id'] = int(attrs['Id'])
             d['postId'] = int(attrs.get('PostId', 0))
-            d['score'] = int(attrs.get('Score', 0))
+            d['votes'] = int(attrs.get('Score', 0))
             d['text'] = attrs.get('Text', '')
-            d['creationDate'] = attrs.get('CreationDate')
+            # solr requires date strings to be in UTC, indicated by a trailing Z
+            d['creationDate'] = attrs.get('CreationDate') + 'Z'
             d['userId'] = int(attrs.get('UserId', 0))
             
         except Exception, e:
@@ -152,6 +157,40 @@ class CommentContentHandler(BaseContentHandler):
             import traceback
             traceback.print_exc()
             print('Could not parse the row ' + repr(attrs))
+
+    def endElement(self, name):
+        if name != 'row':
+            return
+
+        if not self.cur_props:
+            return
+
+        # we want to count failed rows as well as successful ones as this is
+        # a count of rows processed.
+        self.row_count += 1
+
+        # the cur_props is now complete. Add it to the current batch for adding.
+        self.cur_batch.append(self.cur_props)
+
+        self.cur_props = None
+
+        if self.row_count % 1000 == 0:
+            print('%-10s Processed %d rows.' % ('[comment]', self.row_count)
+                  )
+
+        if self.row_count % 10000 == 0:
+            self.commit_comments_batch(commit=False)
+
+    def commit_comments_batch(self, commit=True):
+        """
+        Adds the given list of comments to solr.
+
+        By default, they are committed immediately. Set the ``commit`` argument
+        to False to disable this behaviour.
+        """
+        self.solr.add(self.cur_batch, commit=commit)
+        self.cur_batch = [ ]
+
 
 class UserContentHandler(BaseContentHandler):
     """
@@ -229,8 +268,9 @@ class PostContentHandler(xml.sax.ContentHandler):
     """
     TAGS_RE = re.compile(u'<([^>]+)>')
     
-    def __init__(self, solr, site):
+    def __init__(self, solr, comments_solr, site):
         self.solr = solr
+        self.comments_solr = comments_solr
         self.site = site
         self.unfinished_questions = { }
         self.orphan_answers = { }
@@ -378,7 +418,35 @@ class PostContentHandler(xml.sax.ContentHandler):
         # remove any finished questions from the unfinished list
         for id in finished_question_ids:
             self.unfinished_questions.pop(id)
-    
+
+    def get_comments(self, post_ids):
+        """
+        Retrieves the comments for the given post ID, sorted in creation date
+        order.
+        """
+        # creationDate is not indexed, so we can't sort on it. We'll just sort
+        # ourselves
+        results = self.comments_solr.search(
+            '(%s) AND siteKey:%s' % (' OR '.join('postId:%i' % p for p in post_ids), self.site.key),
+            # a (hopefully) ridiculously high number so we get all comments
+            rows=10000000
+        )
+        results = sorted(results.docs, key=lambda x: (x['postId'], x['creationDate']))
+
+        # convert comment objects to a JSON-serialisable objects
+        results_json = { }
+        import itertools
+        for post_id, comments in itertools.groupby(results, key=lambda x: x['postId']):
+            comments_json = [ ]
+            for c in comments:
+                comment_json = { }
+                for f in ( 'id', 'score', 'text', 'creationDate', 'userId' ):
+                    comment_json[f] = c.get(f)
+                comments_json.append(comment_json)
+            results_json[post_id] = comments_json
+
+        return results_json
+
     def finalise_question(self, q):
         """
         Massages and serialises the question object so it can be inserted into
@@ -401,36 +469,18 @@ class PostContentHandler(xml.sax.ContentHandler):
         post_ids.add(q['id'])
         for a in q['answers']:
             post_ids.add(a['id'])
-        
-        # get the comments
-        comment_objs = Comment.select(AND(Comment.q.siteId == self.site.id,
-                                          IN(Comment.q.postId, list(post_ids))))
-        
-        # sort the comments out into a dict keyed on the post id
-        comments = { }
-        for c in comment_objs:
-            # convert comment object to a JSON-serialisable object
-            comment_json = { }
-            for f in Comment.json_fields:
-                comment_json[f] = getattr(c, f)
-            
-            # we already know that this comment comes from the current site, so
-            # we only need to filter on post ID
-            if not comments.has_key(c.postId):
-                comments[c.postId] = [ ]
-            comments[c.postId].append(comment_json)
+
+        comments = self.get_comments(post_ids)
         
         # add comments to the question
-        if comments.has_key(q['id']):
-            q['comments'].extend(comments[q['id']])
+        q['comments'].extend(comments.get(q['id'], [ ]))
         
         if len(q['comments']) != q['commentCount']:
             print('Post ID [%s] expected to have %d comments, but has %d instead. Ignoring inconsistency.' % (q['id'], q['commentCount'], len(q['comments'])))
         
         # add comments to the answers
         for a in q['answers']:
-            if comments.has_key(a['id']):
-                a['comments'].extend(comments[a['id']])
+            a['comments'].extend(comments.get(a['id'], [ ]))
             
             if len(a['comments']) != a['commentCount']:
                 print('Post ID [%s] expected to have %d comments, but has %d instead. Ignoring inconsistency.' % (a['id'], a['commentCount'], len(a['comments'])))
@@ -558,24 +608,6 @@ class PostContentHandler(xml.sax.ContentHandler):
             print('There are %d answers for missing question [ID# %d]. Ignoring orphan answers.' % (len(answers), question_id))
 
 
-# TEMP COMMENT DATABASE DEFINITION
-comment_db_sqlhub = dbconnection.ConnectionHub()
-class Comment(SQLObject):
-    sourceId = IntCol()
-    siteId = IntCol()
-    postId = IntCol()
-    score = IntCol()
-    text = UnicodeCol()
-    creationDate = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
-    userId = IntCol()
-
-    siteId_postId_index = DatabaseIndex(siteId, postId)
-
-    _connection = comment_db_sqlhub
-
-    json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
-
-
 # METHODS
 def get_file_path(dir_path, filename):
     """
@@ -631,6 +663,17 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
         solr._send_request('GET', 'admin/ping')
     except socket.error, e:
         print('Failed to connect to solr - error was: %s' % str(e))
+        print('Aborting.')
+        sys.exit(2)
+    print('Connected.\n')
+
+    print('Connecting to comments solr...')
+    comments_solr = Solr(settings.SOLR_COMMENTS_URL, assume_clean=True)
+    # pysolr doesn't try to connect until a request is made, so we'll make a ping request
+    try:
+        comments_solr._send_request('GET', 'admin/ping')
+    except socket.error, e:
+        print('Failed to connect to comments solr - error was: %s' % str(e))
         print('Aborting.')
         sys.exit(2)
     print('Connected.\n')
@@ -751,8 +794,9 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     #
     # This also means multiple dataproc processes cannot occur concurrently. If you
     # do the import will be silently incomplete.
-    print('Clearing any uncommitted entries in solr...')
+    print('Clearing any uncommitted entries in solr and comments solr...')
     solr._update('<rollback />', waitFlush=None, waitSearcher=None)
+    comments_solr._update('<rollback />', waitFlush=None, waitSearcher=None)
     print('Cleared.\n')
 
     # check if site is already in database; if so, purge the data.
@@ -775,31 +819,18 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
         sqlhub.threadConnection.commit(close=True)
         print('Deleted.\n')
 
-        print('Deleting site "%s" from the solr... ' % site.name)
+        print('Deleting site "%s" from solr and comments solr... ' % site.name)
         solr.delete(q='siteKey:"%s"' % site.key, commit=False)
         solr.commit(expungeDeletes=True)
+        comments_solr.delete(q='siteKey:"%s"' % site.key, commit=False)
+        comments_solr.commit(expungeDeletes=True)
         print('Deleted.\n')
-
-    # create the temporary comments database
-    print('Connecting to the temporary comments database...')
-    temp_db_file, temp_db_path = tempfile.mkstemp('.sqlite', 'temp_comment_db-' + re.sub(r'[^\w]', '_', site_key) + '-', settings.TEMP_COMMENTS_DATABASE_DIR)
-    os.close(temp_db_file)
-    conn_str = 'sqlite:///' + temp_db_path
-    comment_db_sqlhub.processConnection = connectionForURI(conn_str)
-    print('Connected.')
-    Comment.createTable()
-    print('Schema created.')
-    comment_db_sqlhub.processConnection.getConnection().execute('PRAGMA synchronous = OFF')
-    comment_db_sqlhub.processConnection.getConnection().execute('PRAGMA journal_mode = MEMORY')
-    print('Pragma configured.\n')
 
     timing_start = time.time()
 
     # start a new transaction
     sqlhub.threadConnection = sqlhub.processConnection.transaction()
     conn = sqlhub.threadConnection
-    comment_db_sqlhub.threadConnection = comment_db_sqlhub.processConnection.transaction()
-    temp_db_conn = comment_db_sqlhub.threadConnection
 
     # create a new Site
     site = Site(name=site_name, desc=site_desc, key=site_key, dump_date=dump_date,
@@ -822,10 +853,12 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     print('[comment] PARSING COMMENTS...')
     xml_path = get_file_path(xml_root, 'comments.xml')
     print('[comment] start parsing comments.xml...')
-    handler = CommentContentHandler(temp_db_conn, site)
+    handler = CommentContentHandler(comments_solr, site)
     xml.sax.parse(xml_path, handler)
+    handler.commit_comments_batch(commit=False)
     print('%-10s Processed %d rows.' % ('[comment]', handler.row_count))
-    print('[comment] FINISHED PARSING COMMENTS.\n')
+    comments_solr.commit()
+    print('[comment] FINISHED PARSING AND COMMITTING COMMENTS.\n')
 
     # USERS
     print('[user] PARSING USERS...')
@@ -841,7 +874,7 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
     print('[post] PARSING POSTS...')
     xml_path = get_file_path(xml_root, 'posts.xml')
     print('[post] start parsing posts.xml...')
-    handler = PostContentHandler(solr, site)
+    handler = PostContentHandler(solr, comments_solr, site)
     xml.sax.parse(xml_path, handler)
     handler.commit_all_questions()
     print('%-10s Processed %d rows.' % ('[post]', handler.row_count))
@@ -850,9 +883,8 @@ def import_site(xml_root, site_name, dump_date, site_desc, site_key,
 
     # DELETE COMMENTS
     print('[comment] DELETING TEMPORARY COMMENTS DATABASE (they are no longer needed)...')
-    temp_db_conn.commit(close=True)
-    comment_db_sqlhub.processConnection.close()
-    os.remove(temp_db_path)
+    comments_solr.delete(q='siteKey:"%s"' % site.key, commit=False)
+    comments_solr.commit(expungeDeletes=True)
     print('[comment] FINISHED DELETING COMMENTS.\n')
 
     # commit transaction
