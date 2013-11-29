@@ -246,6 +246,11 @@ class Solr(object):
     Optionally accepts ``timeout`` for wait seconds until giving up on a
     request. Default is ``60`` seconds.
 
+    Optionally accepts ``assume_clean`` to skip cleaning request of invalid XML
+    characters. This offers a slight performance improvement, but only set this
+    to ``True`` if you know your request is clean (e.g. coming from other XML
+    data). Bad things will happen otherwise. Default is ``False``.
+
     Usage::
 
         solr = pysolr.Solr('http://localhost:8983/solr')
@@ -253,10 +258,11 @@ class Solr(object):
         solr = pysolr.Solr('http://localhost:8983/solr', timeout=10)
 
     """
-    def __init__(self, url, decoder=None, timeout=60):
+    def __init__(self, url, decoder=None, timeout=60, assume_clean=False):
         self.decoder = decoder or json.JSONDecoder()
         self.url = url
         self.timeout = timeout
+        self.assume_clean = assume_clean
         self.log = self._get_log()
         self.session = requests.Session()
         self.session.stream = False
@@ -506,7 +512,10 @@ class Solr(object):
 
             value = "{0}".format(value)
 
-        return clean_xml_string(value)
+        if self.assume_clean:
+            return value
+        else:
+            return clean_xml_string(value)
 
     def _to_python(self, value):
         """

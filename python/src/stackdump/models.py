@@ -5,6 +5,10 @@
 from sqlobject import SQLObject, UnicodeCol, DateTimeCol, IntCol, ForeignKey, \
                       DatabaseIndex
 
+
+ISO_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+
+
 class Site(SQLObject):
     name = UnicodeCol()
     desc = UnicodeCol()
@@ -15,34 +19,23 @@ class Site(SQLObject):
     
     siteKey_index = DatabaseIndex(key, unique=True)
 
+
 class Badge(SQLObject):
     sourceId = IntCol()
     site = ForeignKey('Site', cascade=True)
     userId = IntCol()
     name = UnicodeCol()
-    date = DateTimeCol()
+    date = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
 
-class Comment(SQLObject):
-    sourceId = IntCol()
-    site = ForeignKey('Site', cascade=True)
-    postId = IntCol()
-    score = IntCol()
-    text = UnicodeCol()
-    creationDate = DateTimeCol()
-    userId = IntCol()
-    
-    siteId_postId_index = DatabaseIndex(site, postId)
-    
-    json_fields = [ 'id', 'score', 'text', 'creationDate', 'userId' ]
 
 class User(SQLObject):
     sourceId = IntCol()
     site = ForeignKey('Site', cascade=True)
     reputation = IntCol()
-    creationDate = DateTimeCol()
+    creationDate = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
     displayName = UnicodeCol()
     emailHash = UnicodeCol()
-    lastAccessDate = DateTimeCol()
+    lastAccessDate = DateTimeCol(datetimeFormat=ISO_DATE_FORMAT)
     websiteUrl = UnicodeCol()
     location = UnicodeCol()
     age = IntCol()
