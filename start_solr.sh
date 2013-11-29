@@ -22,4 +22,4 @@ then
 fi
 
 cd "$SCRIPT_DIR/java/solr/server"
-"$JAVA_CMD" -Xmx2048M -XX:MaxPermSize=512M -jar start.jar
+"$JAVA_CMD" -Xmx2048M -XX:MaxPermSize=512M -Djetty.host=127.0.0.1 -jar start.jar
