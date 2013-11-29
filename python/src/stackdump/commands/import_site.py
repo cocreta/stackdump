@@ -517,7 +517,10 @@ class PostContentHandler(xml.sax.ContentHandler):
     
     def commit_questions(self, questions, commit=True):
         """
-        Commits the given list of questions to solr.
+        Adds the given list of questions to solr.
+
+        By default, they are committed immediately. Set the ``commit`` argument
+        to False to disable this behaviour.
         """
         self.solr.add(questions, commit=commit)
     
