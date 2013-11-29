@@ -305,19 +305,20 @@ class PostContentHandler(xml.sax.ContentHandler):
             
             if 'AcceptedAnswerId' in attrs:
                 d['acceptedAnswerId'] = int(attrs.get('AcceptedAnswerId', 0))
-            d['creationDate'] = datetime.strptime(attrs.get('CreationDate'), ISO_DATE_FORMAT)
+            # Solr accepts ISO dates, but must be UTC as indicated by trailing Z
+            d['creationDate'] = attrs.get('CreationDate') + 'Z'
             d['score'] = int(attrs.get('Score', 0))
             d['body'] = attrs.get('Body', '')
             d['ownerUserId'] = int(attrs.get('OwnerUserId', 0))
             if 'LastEditorUserId' in attrs:
                 d['lastEditorUserId'] = int(attrs.get('LastEditorUserId', 0))
             if 'LastEditDate' in attrs:
-                d['lastEditDate'] = datetime.strptime(attrs.get('LastEditDate'), ISO_DATE_FORMAT)
-            d['lastActivityDate'] = datetime.strptime(attrs.get('LastActivityDate'), ISO_DATE_FORMAT)
+                d['lastEditDate'] = attrs.get('LastEditDate') + 'Z'
+            d['lastActivityDate'] = attrs.get('LastActivityDate') + 'Z'
             if 'CommunityOwnedDate' in attrs:
-                d['communityOwnedDate'] = datetime.strptime(attrs.get('CommunityOwnedDate'), ISO_DATE_FORMAT)
+                d['communityOwnedDate'] = attrs.get('CommunityOwnedDate') + 'Z'
             if 'ClosedDate' in attrs:
-                d['closedDate'] = datetime.strptime(attrs.get('ClosedDate'), ISO_DATE_FORMAT)
+                d['closedDate'] = attrs.get('ClosedDate') + 'Z'
             d['title'] = attrs.get('Title', '')
             if 'Tags' in attrs:
                 d['tags'] = attrs.get('Tags', '')
