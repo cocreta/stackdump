@@ -36,12 +36,12 @@ h3. Importing the StackOverflow data dump, September 2013
 
 The StackOverflow data dump has grown significantly since I started this project back in 2011. With the improvements in v1.2, on a VM with two cores and 4GB of RAM running CentOS 5.7 on a single, standard hard drive containing spinning pieces of metal,
 
-* it took 84719.565491 seconds to import it, or 23 hours, 31 minutes and 59.565491 seconds
-* once completed, it requires 20GB of disk space
-* during the import, roughly 30GB of disk space was needed
-* the import process used, at max, around 2GB of RAM.
+* it took *84719.565491 seconds* to import it, or *23 hours, 31 minutes and 59.565491 seconds*
+* once completed, it used up *20GB* of disk space
+* during the import, roughly *30GB* of disk space was needed
+* the import process used, at max, around *2GB* of RAM.
 
-In total, the StackOverflow data dump has 15,933,529 posts (questions and answers), 2,332,403 users and a very large number of comments.
+In total, the StackOverflow data dump has *15,933,529 posts* (questions and answers), *2,332,403 users* and a very large number of comments.
 
 h2. Setting up
 
@@ -57,6 +57,12 @@ As long as you have:
 ...you should be able to get an instance up and running.
 
 To provide a better experience, Stackdump can use the RSS feed content to pre-fill some of the required details during the import process, as well as to display the site logos in the app. Stackdump comes bundled with a script that downloads and places these bits in the right places. If you're in a completely offline environment however, it may be worth running this script on a connected box first.
+
+h3. Windows users
+
+If you're using Windows, you will need to substitute the appropriate PowerShell equivalent command for the Stackdump scripts used below. These equivalent PowerShell scripts are in the Stackdump root directory, alongside their Unix counterparts. The names are roughly the same, with the exception of @manage.sh@, which in PowerShell has been broken up into two scripts, @List-StackdumpCommands.ps1@ and @Run-StackdumpCommand.ps1@.
+
+Remember to set your PowerShell execution policy to at least @RemoteSigned@ first as these scripts are not signed. Use the @Get-ExecutionPolicy@ cmdlet to see the current policy, and @Set-ExecutionPolicy@ to set it. You will need to have administrative privileges to set it. 
 
 h3. Extract Stackdump
 
