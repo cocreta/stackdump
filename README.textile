@@ -43,6 +43,8 @@ The StackOverflow data dump has grown significantly since I started this project
 
 In total, the StackOverflow data dump has *15,933,529 posts* (questions and answers), *2,332,403 users* and a very large number of comments.
 
+I attempted this on a similarly spec'ed Windows 7 64-bit VM as well - 23 hours later and it is still trying to process the comments. The SQLite, Python or just disk performance is very poor for some reason. Therefore, if you intend on importing StackOverflow, I would advise you to run Stackdump on Linux instead. The smaller sites all complete without a reasonable time though, and there are no perceptible issues with performance as far as I'm aware on Windows.
+
 h2. Setting up
 
 Stackdump was designed for offline environments or environments with poor internet access, therefore it is bundled with all the dependencies it requires (with the exception of Python, Java and 7-zip). 
