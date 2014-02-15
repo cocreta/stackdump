@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Stackdump // Error 404: Not Found
+{% endblock %}
+
+{% block body %}
+    <div class="row errormessage">
+        <div class="span16">
+            <h1>Error 404: Not Found</h1>
+            <p>
+                The page you are looking for could not be found. The error
+                message is:
+            </p>
+            <p><pre>{{ error.output }}</pre></p>
+        </div>
+    </div>
+{% endblock %}

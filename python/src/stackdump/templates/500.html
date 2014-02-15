@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Stackdump // Error 500: {{ error.output }}
+{% endblock %}
+
+{% block body %}
+    <div class="row errormessage">
+        <div class="span16">
+            <h1>Something went wrong.</h1>
+            <p>
+                Stackdump could not complete your request. Try your query again
+                later as this may be a symptom of a high load on the app at the
+                moment.
+            </p>
+            <p class="subinfo">
+                If this issue persists, try restarting the Stackdump daemons/
+                services (<em>stackdump_web</em> and/or <em>stackdump_solr</em>)
+                or processes (<em>start_web.sh</em> and/or <em>start_solr.sh</em>).
+            </p>
+        </div>
+    </div>
+{% endblock %}

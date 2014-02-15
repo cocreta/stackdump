@@ -1,0 +1,27 @@
+^JAVA_CMD$
+^PYTHON_CMD$
+
+# ignore any data
+^data/.*$
+
+# ignore working bytecode
+\.class$
+\.pyc$
+
+^datadump/.*
+
+# ignore test and tutorial directories
+test/.*$
+tests/.*$
+testsuite/.*$
+tutorial/.*$
+
+# Solr/Jetty
+^java/solr/server/solr-webapp/.*
+^java/solr/server/logs/.*
+
+# ignore the downloaded logos
+^python/media/images/logos/.*
+
+# PyCharm project files
+^.idea/

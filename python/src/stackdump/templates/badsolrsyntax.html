@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Stackdump // Bad Search Syntax
+{% endblock %}
+
+{% block body %}
+    <div class="row errormessage">
+        <div class="span16">
+            <h1>Error: bad search syntax</h1>
+            <p>
+                The search query you entered,
+            </p>
+            <p><pre>{{ error.responseHeader.params.q }}</pre></p>
+            <p>
+                ...is not valid. The error message is:
+            </p>
+            <p><pre>{{ error.error.msg }}</pre></p>
+            <p>
+                If you see a <em>siteKey</em> parameter in your query, that 
+                was added by Stackdump to filter the search down to this 
+                particular site.
+            </p>
+            <p>
+                A common cause is using colons in the query. A colon is used
+                to search a particular field in the search index. Searching 
+                using fields directly is not supported by Stackdump. To 
+                perform a search using special characters like the colon, 
+                enclose the query term in quotes, e.g. "foo:bar".
+            </p>
+            <p class="page-actions"><a href="javascript:window.history.go(-1)">&larr; Return to the previous page to retry the search query</a></p>
+        </div>
+    </div>
+{% endblock %}

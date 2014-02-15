@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ SETTINGS.APP_URL_ROOT }}media/css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="{{ SETTINGS.APP_URL_ROOT }}media/css/main.css" type="text/css" />
+    <script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/jquery-1.6.4.js"></script>
+    {% block extrahead %}{% endblock %}
+</head>
+
+<body>
+    <div class="topbar"> 
+        <div class="fill"> 
+            <div class="container">
+                <span class="topbar-text">
+                    <a href="{{ SETTINGS.APP_URL_ROOT }}">Stackdump</a>
+                    {% if site %}
+                    <span class="topbar-divider">//</span>
+                    <a href="{{ SETTINGS.APP_URL_ROOT }}{{ site.key }}">{{ site.name }}</a>
+                    from {{ site.dump_date }}
+                    {% endif %}
+                </span>
+                
+                
+                <form method="get" action="{{ SETTINGS.APP_URL_ROOT }}{% if site %}{{ site.key }}/{% endif %}search" class="pull-right"> 
+                    <input type="text" placeholder="Search {% if site %}{{ site.name }}{% endif %}" name="q" />
+                </form> 
+            </div> 
+        </div> 
+    </div>
+    
+    <div id="wrapper">
+    <div id="content">
+    <div class="container">
+    {%- block body %}
+    {% endblock -%}
+    </div>
+    </div>
+    <div id="footer-push"></div>
+    </div>
+    
+    <div id="footer">
+        <p class="footer-right">
+            <a href="{{ SETTINGS.APP_URL_ROOT }}import">How do I import data?</a>
+        </p>
+        <a href="https://bitbucket.org/samuel.lai/stackdump/">Stackdump</a> is
+        licensed under the
+        <a href="{{ SETTINGS.APP_URL_ROOT }}licenses/mit">MIT License</a>. The
+        <a href="http://www.stackexchange.com">StackExchange</a> content is
+        licensed under the
+        <a href="{{ SETTINGS.APP_URL_ROOT }}licenses/cc-wiki">Creative
+        Commons [cc-wiki] License</a>.
+    </div>
+</body>
+</html>

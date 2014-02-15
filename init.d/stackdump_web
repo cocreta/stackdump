@@ -1,0 +1,141 @@
+#! /bin/bash
+#
+# stackdump_web:       Starts the Stackdump web app
+#
+# chkconfig: 345 99 01
+# description: This daemon is the web server for Stackdump.\
+#              It requires the Solr instance to be running to function.
+
+# Source function library.
+. /etc/init.d/functions
+
+# this needs to be the path of the Stackdump root directory.
+STACKDUMP_HOME=/opt/stackdump/
+
+# this is the user that Stackdump runs under
+STACKDUMP_USER=stackdump
+
+WEB_PID_FILE=/var/run/stackdump_web.pid
+
+if [ ! -d "$STACKDUMP_HOME" ]
+then
+    echo "The STACKDUMP_HOME variable does not point to a valid directory."
+    exit 1
+fi
+
+base=${0##*/}
+
+start() {
+	echo -n $"Starting Stackdump - Web... "
+	
+        # create the logs directory if it doesn't already exist
+        if [ ! -d "$STACKDUMP_HOME/logs" ]
+        then
+            runuser -s /bin/bash $STACKDUMP_USER -c "mkdir $STACKDUMP_HOME/logs"
+        fi
+        
+        # check if it is already running
+        WEB_PID=`cat $WEB_PID_FILE 2>/dev/null`
+        if [ ! -z "$WEB_PID" ]
+        then
+            if [ ! -z "$(pgrep -P $WEB_PID)" ]
+            then
+                echo
+                echo "Stackdump - Web is already running."
+                exit 2
+            else
+                # the PID is stale.
+                rm $WEB_PID_FILE
+            fi
+        fi
+        
+        # run it!
+        runuser -s /bin/bash $STACKDUMP_USER -c "$STACKDUMP_HOME/start_web.sh >> $STACKDUMP_HOME/logs/web.log 2>&1" &
+        WEB_PID=$!
+        RETVAL=$?
+        
+        if [ $RETVAL = 0 ]
+        then
+            echo $WEB_PID > $WEB_PID_FILE
+            success $"$base startup"
+        else
+            failure $"$base startup"
+        fi
+	echo
+	return $RETVAL
+}
+
+stop() {
+        # check if it is running
+        WEB_PID=`cat $WEB_PID_FILE 2>/dev/null`
+        if [ -z "$WEB_PID" ] || [ -z "$(pgrep -P $WEB_PID)" ]
+        then
+            echo "Stackdump - Web is not running."
+            exit 2
+        fi
+        
+        echo -n $"Shutting down Stackdump - Web... "
+        
+        # it is running, so shut it down.
+        # there are many levels of processes here and the kill signal needs to
+        # be sent to the actual Python process for the process to stop, so let's
+        # just kill the whole process group.
+        RUNUSER_CMD_PID=`pgrep -P $WEB_PID`
+        RUNUSER_CMD_PGRP=`ps -o pgrp --no-headers -p $RUNUSER_CMD_PID`
+        
+        pkill -g $RUNUSER_CMD_PGRP
+        RETVAL=$?
+	[ $RETVAL = 0 ] && success $"$base shutdown" || failure $"$base shutdown"
+	rm -f $WEB_PID_FILE
+	echo
+	return $RETVAL
+}
+
+status() {
+    # check if it is running
+    WEB_PID=`cat $WEB_PID_FILE 2>/dev/null`
+    if [ -z "$WEB_PID" ]
+    then
+        echo "Stackdump - Web is not running."
+        exit 0
+    else
+        if [ -z "$(pgrep -P $WEB_PID)" ]
+        then
+            rm -f $WEB_PID_FILE
+            echo "Stackdump - Web is not running."
+            exit 0
+        else
+            echo "Stackdump - Web is running."
+            exit 0
+        fi
+    fi
+}
+
+restart() {
+	stop
+	start
+}
+
+RETVAL=0
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+        status
+	;;
+  restart)
+	restart
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart}"
+	exit 1
+esac
+
+exit $RETVAL
+

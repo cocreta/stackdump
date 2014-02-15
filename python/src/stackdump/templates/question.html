@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% import 'common.macros' as macros %}
+
+{% block title %}Stackdump // {{ site.name }} // {{ result.question.title }}{% endblock %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="{{ SETTINGS.APP_URL_ROOT }}media/js/google-code-prettify/prettify.css" type="text/css" />
+<script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/google-code-prettify/prettify.js"></script>
+{% if result.siteKey == 'math' %}
+<!-- this extra configuration tells mathjax to treat text between single $
+     characters as equations. Mathjax is only enabled on math.stackexchange
+     where there is a much lower likelihood of other discussion containing
+     $ characters. -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+  'HTML-CSS': {imageFont: null}
+});
+</script>
+<script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+{% endif %}
+<script type="text/javascript" src="{{ SETTINGS.APP_URL_ROOT }}media/js/comments.js"></script>
+{% endblock %}
+
+{% block body %}
+    {% set r = result %}
+    <div class="row">
+        <div class="span16">
+            <form id="search" method="get" action="{{ SETTINGS.APP_URL_ROOT }}{{ site.key }}/search">
+                <input type="text" class="xlarge" name="q" value="{{ query }}" />
+                <input type="hidden" name="s" value="{{ sort_by }}" />
+                <input type="submit" class="btn primary" value="Search{% if site %} {{ site.name }}{% endif %}" />
+            </form>
+        </div>
+    </div>
+    <div class="row question">
+        <div class="span16">
+            <h1>
+                {% if site.base_url %}
+                <span title="StackExchange question URL: http://{{ site.base_url }}/questions/{{ r.question.id }}">{{ r.question.title }}</span>
+                {% else %}
+                {{ r.question.title }}
+                {% endif %}
+            </h1>
+            <div class="post-stats-vertical">
+                <div class="post-stat">
+                    <p class="post-stat-value {% if r.question.score < 0 %}post-stat-value-poor{% endif %}">
+                        {{ r.question.score }}
+                    </p>
+                    <p>vote{% if r.question.score != 1 %}s{% endif %}</p>
+                </div>
+                <div class="post-stat">
+                    <p class="post-stat-value {% if r.answers|length == 0 %}post-stat-value-poor{% endif %}">
+                        {{ r.answers|length }}
+                    </p>
+                    <p>answer{% if r.answers|length != 1 %}s{% endif %}</p>
+                </div>
+            </div>
+            <div class="post-body">
+                {{ r.question.body|safe }}
+            </div>
+            <div class="post-metadata">
+                <div class="post-user">
+                    <p>asked on <strong>{{ r.question.creationDate|format_datetime }}</strong></p>
+                    {{ macros.user_card(r.question.ownerUser) }}
+                </div>
+                
+                {% if r.question.lastEditorUser %}
+                <div class="post-user">
+                    <p>last edited <strong>{{ r.question.lastActivityDate|format_datetime }}</strong></p>
+                    {{ macros.user_card(r.question.lastEditorUser) }}
+                </div>
+                {% endif %}
+                <div class="post-tags">
+                    {% for t in r.question.tags %}
+                    <span class="label">{{ t }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if r.question.comments %}
+            <div class="post-comments">
+                {{ macros.render_comments(r.question, SETTINGS.NUM_OF_DEFAULT_COMMENTS) }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if r.question.closedDate %}
+    <div class="row moderated">
+        <div class="span16">
+            <p>This question was <em>closed</em> by a moderator on <strong>{{ r.question.closedDate|format_datetime }}</strong>.</p>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row answers">
+        <div class="span16">
+            {% if r.answers|length > 0 %}
+            <h1 class="answers">{{ r.answers|length }} answer{% if r.answers|length != 1 %}s{% endif %}</h1>
+            <ul class="answers">
+                {% for a in r.answers %}
+                <li id="answer-{{ a.id }}">
+                    <a name="answer-{{ a.id }}"></a>
+                    <div class="post-stats-vertical">
+                        <div class="post-stat">
+                            <p class="post-stat-value {% if a.score < 0 %}post-stat-value-poor{% endif %}">
+                                {{ a.score }}
+                            </p>
+                            <p>vote{% if a.score != 1 %}s{% endif %}</p>
+                        </div>
+                        {% if r.question.acceptedAnswerId %}
+                        {% if r.question.acceptedAnswerId == a.id %}
+                        <div class="post-stat post-stat-img">
+                            <img src="{{ SETTINGS.APP_URL_ROOT }}media/images/accepted_answer.png" alt="Accepted answer" />
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="post-body">
+                        {{ a.body|safe }}
+                    </div>
+                    <div class="post-metadata">
+                        <div class="post-user">
+                            <p>answered on <strong>{{ a.creationDate|format_datetime }}</strong></p>
+                            {{ macros.user_card(a.ownerUser) }}
+                        </div>
+                        
+                        {% if a.lastEditorUser %}
+                        <div class="post-user">
+                            <p>last edited <strong>{{ a.lastEditDate|format_datetime }}</strong></p>
+                            {{ macros.user_card(a.lastEditorUser) }}
+                        </div>
+                        {% endif %}
+                        <div class="post-actions">
+                            <a href="{{ SETTINGS.APP_URL_ROOT }}{{ r.site.key }}/a/{{ a.id }}">permalink</a>
+                        </div>
+                        <div class="post-tags">
+                            {% for t in a.tags %}
+                            <span class="label">{{ t }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="post-comments">
+                        {% if a.comments %}
+                        {{ macros.render_comments(a, SETTINGS.NUM_OF_DEFAULT_COMMENTS) }}
+                        {% endif %} 
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-answers">There are no answers for this question :(</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        // enable pretty printing. This uses the google-code-prettify library.
+        // That library requires code blocks to be annotated with the
+        // 'prettyprint' CSS class for it to prettify it.
+        //
+        // All of StackExchange's code blocks (i.e. not code keywords, but
+        // actual blocks of code) are enclosed inside pre tags.
+        $(document).ready(function() {
+            $('pre code').each(function(index, value) { $(value).addClass('prettyprint');});
+            prettyPrint();
+        });
+
+        {% if answer_id %}
+        // scroll to a particular answer when answer ID given in URL
+        $(document).ready(function() {
+            $('html, body').animate({
+                // minus 20 to add a bit of padding at the top of the window
+                scrollTop: $('#answer-{{ answer_id }}').offset().top - 20
+            }, 1000);
+        });
+        {% endif %}
+    </script>
+{% endblock %}
