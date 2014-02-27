@@ -32,6 +32,12 @@ h2. Changes and upgrading from v1.1 to v1.2.
 
 The major change in the v1.2 release are improvements to the speed of importing data. There are some other smaller changes, including new PowerShell scripts to start and manage Stackdump on Windows as well as a few bug fixes when running on Windows. The search indexing side of things has not changed, therefore data imported using v1.1 will continue to work in v1.2. _Data from older versions however, needs to be re-indexed. See the above section on upgrading to v1.1 for more details._
 
+h2. Changes and upgrading from v1.2 to v1.3.
+
+v1.3 is primarily bugfix release, for a fairly serious bug. It turns out Stackdump has been subtly overwriting questions as more sites are imported because it assumed post IDs were unique across all sites, when they in fact were not.  This meant as more sites were imported, the previous sites started to lose questions. The fix required a change to search index, therefore *all data will need to be re-imported after installing this version*. Thanks to @yammesicka for reporting the issue.
+
+Other changes include a new setting to allow disabling the link and image URL rewriting, and a change to the import_site command so it doesn't bail immediately if there is a Solr connection issue - it will prompt and allow resumption after the connection issue has been resolved.
+
 h3. Importing the StackOverflow data dump, September 2013
 
 The StackOverflow data dump has grown significantly since I started this project back in 2011. With the improvements in v1.2, on a VM with two cores and 4GB of RAM running CentOS 5.7 on a single, standard hard drive containing spinning pieces of metal,
@@ -53,7 +59,7 @@ As long as you have:
 * "Python":http://python.org/download/,
 * "Java":http://java.com/en/download/manual.jsp,
 * "Stackdump":https://bitbucket.org/samuel.lai/stackdump/downloads,
-* the "StackExchange Data Dump":http://www.clearbits.net/creators/146-stack-exchange-data-dump (Note: this is only available as a torrent), and
+* the "StackExchange Data Dump":https://archive.org/details/stackexchange (download the sites you wish to import - note that StackOverflow is split into 7 archive files; only Comments, Posts and Users are required), and
 * "7-zip":http://www.7-zip.org/ (needed to extract the data dump files)
 
 ...you should be able to get an instance up and running.
@@ -132,13 +138,24 @@ To start Stackdump, execute the following command -
 
 ... and visit port 8080 on that machine. That's it - your own offline, read-only instance of StackExchange.
 
-If you need to change the port that it runs on, modify @stackdump_dir/python/src/stackdump/settings.py@ and restart the app.
-
-The aforementioned @settings.py@ file also contains some other settings that control how Stackdump works.
+If you need to change the port that it runs on, or modify other settings that control how Stackdump works; see the 'Optional configuration' section below for more details.
 
 Stackdump comes bundled with some init.d scripts as well which were tested on CentOS 5. These are located in the @init.d@ directory. To use these, you will need to modify them to specify the path to the Stackdump root directory and the user to run under.
 
 Both the search indexer and the app need to be running for Stackdump to work.
+
+h2. Optional configuration
+
+There are a few settings for those who like to tweak. There's no need to adjust them normally though; the default settings should be fine.
+
+The settings file is located in @stackdump_dir/python/src/stackdump/settings.py@. The web component will need to be restarted after changes have been made for them to take effect.
+
+* *SERVER_HOST* - the network interface to run the Stackdump web app on. Use _'0.0.0.0'_ for all interfaces, or _'127.0.0.1'_ for localhost only. By default, it runs on all interfaces.
+* *SERVER_PORT* - the port to run the Stackdump web app on. The default port is _8080_.
+* *SOLR_URL* - the URL to the Solr instance. The default assumes Solr is running on the same system. Change this if Solr is running on a different system.
+* *NUM_OF_DEFAULT_COMMENTS* - the number of comments shown by default for questions and answers before the remaining comments are hidden (and shown when clicked). The default is _3_ comments.
+* *NUM_OF_RANDOM_QUESTIONS* - the number of random questions shown on the home page of Stackdump and the site pages. The default is _3_ questions.
+* *REWRITE_LINKS_AND_IMAGES* - by default, all links are rewritten to either point internally or be marked as an external link, and image URLs are rewritten to point to a placeholder image. Set this setting to _False_ to disable this behaviour. 
 
 h2. Maintenance
 
