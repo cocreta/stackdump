@@ -110,6 +110,10 @@
 
    <!-- we'll get the values out of the JSON, so most fields are not stored -->
    <!-- fields are listed here so searches can be performed against them -->
+   <!-- this is used by Lucene to uniquely identify a post across all sites.
+        It is of the form "siteKey-id" and is necessary because post IDs are
+        reused across sites. -->
+   <field name="documentId" type="string" indexed="true" stored="true" required="true" />
    <!-- the ID field needs to be a string for the QueryElevationComponent -->
    <field name="id" type="string" indexed="true" stored="true" required="true" />
    <field name="siteKey" type="string" indexed="true" stored="true" required="true" />
@@ -196,7 +200,7 @@
  <!-- Field to use to determine and enforce document uniqueness. 
       Unless this field is marked with required="false", it will be a required field
    -->
- <uniqueKey>id</uniqueKey>
+ <uniqueKey>documentId</uniqueKey>
 
  <!-- DEPRECATED: The defaultSearchField is consulted by various query parsers when
   parsing a query string that isn't explicit about the field.  Machine (non-user)

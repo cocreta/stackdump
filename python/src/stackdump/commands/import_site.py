@@ -459,6 +459,9 @@ class PostContentHandler(xml.sax.ContentHandler):
         doc['answers-json'] = [ json.dumps(a, default=self.json_default_handler) for a in q['answers'] ]
         
         # map other fields to search index doc
+        # this is the ID for Solr to uniquely identify this question across all
+        # sites
+        doc['documentId'] = self.site.key + '-' + str(q['id'])
         doc['id'] = str(q['id'])
         doc['siteKey'] = self.site.key
         doc['creationDate'] = q['creationDate']
