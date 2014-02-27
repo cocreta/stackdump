@@ -164,13 +164,13 @@ Another option is to use "Supervisor":http://supervisord.org/ with a simple conf
 bc.. [program:stackdump-solr]
 command=/path/to/stackdump/start_solr.sh
 priority=900
-user=<stackdump user>
+user=stackdump_user
 stdout_logfile=/path/to/stackdump/solr_stdout.log
 stderr_logfile=/path/to/stackdump/solr_stderr.log
 
 [program:stackdump-web]
 command=/path/to/stackdump/start_web.sh
-user=<stackdump user>
+user=stackdump_user
 stdout_logfile=/path/to/stackdump/web_stdout.log
 stderr_logfile=/path/to/stackdump/web_stderr.log
 
