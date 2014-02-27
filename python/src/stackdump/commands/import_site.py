@@ -260,8 +260,20 @@ class PostContentHandler(xml.sax.ContentHandler):
                 d['answers'] = [ ]
                 d['answerCount'] = int(attrs.get('AnswerCount', 0))
                 d['viewCount'] = int(attrs.get('ViewCount', 0))
+            elif attrs['PostTypeId'] == '3':
+                raise ValueError('Skipping row ID [%s] as it is an orphaned tag wiki page (PostTypeId [3]).' % (attrs.get('Id', -1)))
+            elif attrs['PostTypeId'] == '4':
+                raise ValueError('Skipping row ID [%s] as it is a tag wiki excerpt (PostTypeId [4]).' % (attrs.get('Id', -1)))
+            elif attrs['PostTypeId'] == '5':
+                raise ValueError('Skipping row ID [%s] as it is a tag wiki page (PostTypeId [5]).' % (attrs.get('Id', -1)))
+            elif attrs['PostTypeId'] == '6':
+                raise ValueError('Skipping row ID [%s] as it is a moderator nomination post (PostTypeId [6]).' % (attrs.get('Id', -1)))
+            elif attrs['PostTypeId'] == '7':
+                raise ValueError('Skipping row ID [%s] as it is a wiki placeholder page (PostTypeId [7]).' % (attrs.get('Id', -1)))
+            elif attrs['PostTypeId'] == '8':
+                raise ValueError('Skipping row ID [%s] as it is an privilege wiki page (PostTypeId [8]).' % (attrs.get('Id', -1)))
             else:
-                raise ValueError('Unknown PostTypeId [%s] for row ID [%s]. Probably a tag wiki page.' % (attrs.get('PostTypeId', -1), attrs.get('Id', -1)))
+                raise ValueError('Unknown PostTypeId [%s] for row ID [%s].' % (attrs.get('PostTypeId', -1), attrs.get('Id', -1)))
             
             if 'AcceptedAnswerId' in attrs:
                 d['acceptedAnswerId'] = int(attrs.get('AcceptedAnswerId', 0))
