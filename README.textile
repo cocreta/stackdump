@@ -140,8 +140,6 @@ To start Stackdump, execute the following command -
 
 If you need to change the port that it runs on, or modify other settings that control how Stackdump works; see the 'Optional configuration' section below for more details.
 
-Stackdump comes bundled with some init.d scripts as well which were tested on CentOS 5. These are located in the @init.d@ directory. To use these, you will need to modify them to specify the path to the Stackdump root directory and the user to run under.
-
 Both the search indexer and the app need to be running for Stackdump to work.
 
 h2. Optional configuration
@@ -156,6 +154,25 @@ The settings file is located in @stackdump_dir/python/src/stackdump/settings.py@
 * *NUM_OF_DEFAULT_COMMENTS* - the number of comments shown by default for questions and answers before the remaining comments are hidden (and shown when clicked). The default is _3_ comments.
 * *NUM_OF_RANDOM_QUESTIONS* - the number of random questions shown on the home page of Stackdump and the site pages. The default is _3_ questions.
 * *REWRITE_LINKS_AND_IMAGES* - by default, all links are rewritten to either point internally or be marked as an external link, and image URLs are rewritten to point to a placeholder image. Set this setting to _False_ to disable this behaviour. 
+
+h2. Running Stackdump as a service
+
+Stackdump comes bundled with some init.d scripts as well which were tested on CentOS 5. These are located in the @init.d@ directory. To use these, you will need to modify them to specify the path to the Stackdump root directory and the user to run under.
+
+Another option is to use "Supervisor":http://supervisord.org/ with a simple configuration file, e.g.,
+
+bc. [program:stackdump-solr]
+command=/path/to/stackdump/start_solr.sh
+priority=900
+user=<stackdump user>
+stdout_logfile=/path/to/stackdump/solr_stdout.log
+stderr_logfile=/path/to/stackdump/solr_stderr.log
+
+[program:stackdump-web]
+command=/path/to/stackdump/start_web.sh
+user=<stackdump user>
+stdout_logfile=/path/to/stackdump/web_stdout.log
+stderr_logfile=/path/to/stackdump/web_stderr.log
 
 h2. Maintenance
 
