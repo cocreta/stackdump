@@ -28,15 +28,15 @@ Version 1.1 fixes a few bugs, the major one being the inability to import the 20
 
 Because changes have been made to the search schema and the search indexer has been upgraded (to Solr 4.5), all data will need to be re-indexed. Therefore there is no upgrade path; follow the instructions below to set up Stackdump again. It is recommended to install this new version in a new directory, instead of overwriting the existing one.
 
-h2. Changes and upgrading from v1.1 to v1.2.
+h2. Changes and upgrading from v1.1 to v1.2
 
 The major change in the v1.2 release are improvements to the speed of importing data. There are some other smaller changes, including new PowerShell scripts to start and manage Stackdump on Windows as well as a few bug fixes when running on Windows. The search indexing side of things has not changed, therefore data imported using v1.1 will continue to work in v1.2. _Data from older versions however, needs to be re-indexed. See the above section on upgrading to v1.1 for more details._
 
-h2. Changes and upgrading from v1.2 to v1.3.
+h2. Changes and upgrading from v1.2 to v1.3
 
-v1.3 is primarily bugfix release, for a fairly serious bug. It turns out Stackdump has been subtly overwriting questions as more sites are imported because it assumed post IDs were unique across all sites, when they in fact were not.  This meant as more sites were imported, the previous sites started to lose questions. The fix required a change to search index, therefore *all data will need to be re-imported after installing this version*. Thanks to @yammesicka for reporting the issue.
+v1.3 is primarily bugfix release, for a fairly serious bug. It turns out Stackdump has been subtly overwriting questions as more sites are imported because it assumed post IDs were unique across all sites, when they in fact were not.  This meant as more sites were imported, the previous sites started to lose questions. The fix required a change to search index, therefore *the data directory will need to be deleted and all data will need to be re-imported after installing this version*. Thanks to @yammesicka for reporting the issue.
 
-Other changes include a new setting to allow disabling the link and image URL rewriting, and a change to the import_site command so it doesn't bail immediately if there is a Solr connection issue - it will prompt and allow resumption after the connection issue has been resolved.
+Other changes include a new setting to allow disabling the link and image URL rewriting, and a change to the @import_site@ command so it doesn't bail immediately if there is a Solr connection issue - it will prompt and allow resumption after the connection issue has been resolved.
 
 h3. Importing the StackOverflow data dump, September 2013
 
