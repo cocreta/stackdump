@@ -13,6 +13,7 @@ import re
 import urllib2
 import socket
 import tempfile
+import traceback
 from optparse import OptionParser
 from xml.etree import ElementTree
 
@@ -20,7 +21,7 @@ from sqlobject import sqlhub, connectionForURI, AND, IN, SQLObject, \
     UnicodeCol, DateTimeCol, IntCol, DatabaseIndex, dbconnection
 from sqlobject.sqlbuilder import Delete, Insert
 from sqlobject.styles import DefaultStyle
-from pysolr import Solr
+from pysolr import Solr, SolrError
 
 from stackdump.models import Site, Badge, User
 from stackdump import settings
@@ -538,7 +539,24 @@ class PostContentHandler(xml.sax.ContentHandler):
         By default, they are committed immediately. Set the ``commit`` argument
         to False to disable this behaviour.
         """
-        self.solr.add(questions, commit=commit)
+        while True:
+            try:
+                self.solr.add(questions, commit=commit)
+                break
+            except SolrError, e:
+                print('An exception occurred while committing questions - ')
+                traceback.print_exc(file=sys.stdout)
+                print('')
+                while True:
+                    response = raw_input('Try committing the questions again? (y/n) ').lower()
+                    if response not in ('y', 'n'):
+                        print("Answer either 'y' or 'n'. Answering 'n' will abort the import process.")
+                    else:
+                        print('')
+                        if response == 'y':
+                            break
+                        else:
+                            raise
     
     def commit_all_questions(self):
         """
