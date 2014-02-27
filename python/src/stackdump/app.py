@@ -410,7 +410,8 @@ def view_question(site_key, question_id, answer_id=None):
     
     result = results.docs[0]
     convert_comments_to_html(result)
-    rewrite_result(result)
+    if settings.REWRITE_LINKS_AND_IMAGES:
+        rewrite_result(result)
     sort_answers(result)
     context['result'] = result
 

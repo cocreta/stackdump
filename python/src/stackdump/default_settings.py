@@ -32,6 +32,9 @@ NUM_OF_DEFAULT_COMMENTS = 3
 # number of random questions to show on search query pages
 NUM_OF_RANDOM_QUESTIONS = 3
 
+# rewrite links and images to point internally or to a placeholder respectively
+REWRITE_LINKS_AND_IMAGES = True
+
 # settings that are available in templates
 TEMPLATE_SETTINGS = [
     'APP_URL_ROOT',

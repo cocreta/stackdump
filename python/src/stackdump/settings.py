@@ -34,3 +34,6 @@ from default_settings import *
 
 # number of random questions to show on search query pages
 #NUM_OF_RANDOM_QUESTIONS = 3
+
+# rewrite links and images to point internally or to a placeholder respectively
+#REWRITE_LINKS_AND_IMAGES = True
