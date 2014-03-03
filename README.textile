@@ -74,7 +74,7 @@ Remember to set your PowerShell execution policy to at least @RemoteSigned@ firs
 
 h3. Extract Stackdump
 
-Stackdump was to be self-contained, so to get it up and running, simply extract the Stackdump download to an appropriate location.
+Stackdump was designed to be self-contained, so to get it up and running, simply extract the Stackdump download archive to an appropriate location.
 
 h3. Verify dependencies
 
@@ -116,15 +116,15 @@ To start the import process, execute the following command -
 
 @stackdump_dir/manage.sh import_site --base-url site_url --dump-date dump_date path_to_xml_files@
 
-... where site_url is the URL of the site you're importing, e.g. __android.stackexchange.com__; dump_date is the date of the data dump you're importing, e.g. __August 2012__, and finally path_to_xml_files is the path to the XML files you just extracted. The dump_date is a text string that is shown in the app only, so it can be in any format you want.
+... where @site_url@ is the URL of the site you're importing, e.g. __android.stackexchange.com__; @dump_date@ is the date of the data dump you're importing, e.g. __August 2012__, and finally @path_to_xml_files@ is the path to the directory containing the XML files that were just extracted. The @dump_date@ is a text string that is shown in the app only, so it can be in any format you want.
 
-For example, to import the August 2012 data dump of the Android StackExchange site, you would execute -
+For example, to import the August 2012 data dump of the Android StackExchange site, with the files extracted into @/tmp/android@, you would execute -
 
 @stackdump_dir/manage.sh import_site --base-url android.stackexchange.com --dump-date "August 2012" /tmp/android@
 
 It is normal to get messages about unknown PostTypeIds and missing comments and answers. These errors are likely due to those posts being hidden via moderation.
 
-This can take anywhere between a minute to 10 hours or more depending on the site you're importing. As a rough guide, __android.stackexchange.com__ took a minute on my VM, while __stackoverflow.com__ took just over 10 hours.
+This can take anywhere between a minute to 20 hours or more depending on the site you're importing. As a rough guide, __android.stackexchange.com__ took a minute on my VM, while __stackoverflow.com__ took just under 24 hours.
 
 Repeat these steps for each site you wish to import. Do not attempt to import multiple sites at the same time; it will not work and you may end up with half-imported sites.
 
@@ -174,11 +174,13 @@ user=stackdump_user
 stdout_logfile=/path/to/stackdump/web_stdout.log
 stderr_logfile=/path/to/stackdump/web_stderr.log
 
+p. Yet another option for those using newer Linux distributions is to create native "systemd service definitions":http://www.freedesktop.org/software/systemd/man/systemd.service.html of type _simple_ for each of the components.
+
 h2. Maintenance
 
 Stackdump stores all its data in the @data@ directory under its root directory. If you want to start fresh, just stop the app and the search indexer, delete that directory and restart the app and search indexer.
 
-To delete certain sites from Stackdump, use the manage_sites management command -
+To delete certain sites from Stackdump, use the @manage_sites@ management command -
 
 @stackdump_dir/manage.sh manage_sites -l@ to list the sites (and their site keys) currently in the system;
 @stackdump_dir/manage.sh manage_sites -d site_key@ to delete a particular site.
