@@ -538,13 +538,17 @@ class PostContentHandler(xml.sax.ContentHandler):
 
         By default, they are committed immediately. Set the ``commit`` argument
         to False to disable this behaviour.
+
+        This function will loop if a SolrError is encountered to allow the user
+        to retry the commit without having to start again from the beginning,
+        e.g. if the Solr instance stops responding.
         """
         while True:
             try:
                 self.solr.add(questions, commit=commit)
                 break
             except SolrError, e:
-                print('An exception occurred while committing questions - ')
+                print('A Solr error occurred while committing questions - ')
                 traceback.print_exc(file=sys.stdout)
                 print('')
                 while True:
@@ -557,6 +561,8 @@ class PostContentHandler(xml.sax.ContentHandler):
                             break
                         else:
                             raise
+            except:
+                raise
     
     def commit_all_questions(self):
         """
