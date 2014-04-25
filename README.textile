@@ -59,7 +59,7 @@ As long as you have:
 * "Python":http://python.org/download/,
 * "Java":http://java.com/en/download/manual.jsp,
 * "Stackdump":https://bitbucket.org/samuel.lai/stackdump/downloads,
-* the "StackExchange Data Dump":https://archive.org/details/stackexchange (download the sites you wish to import - note that StackOverflow is split into 7 archive files; only Comments, Posts and Users are required), and
+* the "StackExchange Data Dump":https://archive.org/details/stackexchange (download the sites you wish to import - note that StackOverflow is split into 7 archive files; only Comments, Posts and Users are required but after extraction the files need to be renamed to Comments.xml, Posts.xml and Users.xml respectively), and
 * "7-zip":http://www.7-zip.org/ (needed to extract the data dump files)
 
 ...you should be able to get an instance up and running.
@@ -207,6 +207,7 @@ Stackdump leverages several open-source projects to do various things, including
 * "markdown":http://pypi.python.org/pypi/Markdown for rendering comments
 * "mathjax":http://www.mathjax.org/ for displaying mathematical expressions properly
 * "httplib2":http://code.google.com/p/httplib2/ as a dependency of pysolr
+* "requests":https://github.com/kennethreitz/requests/ as a dependency of pysolr
 * "Apache Solr":http://lucene.apache.org/solr/ for search functionality
 
 h2. Things not supported... yet
