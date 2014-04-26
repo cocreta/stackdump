@@ -56,8 +56,8 @@ h2. Setting up
 Stackdump was designed for offline environments or environments with poor internet access, therefore it is bundled with all the dependencies it requires (with the exception of Python, Java and 7-zip). 
 
 As long as you have:
-* "Python":http://python.org/download/,
-* "Java":http://java.com/en/download/manual.jsp,
+* "Python":http://python.org/download/, version 2.5 or later but not version 3 (ideally v2.7.6),
+* "Java":http://java.com/en/download/manual.jsp, version 6 (1.6) or later,
 * "Stackdump":https://bitbucket.org/samuel.lai/stackdump/downloads,
 * the "StackExchange Data Dump":https://archive.org/details/stackexchange (download the sites you wish to import - note that StackOverflow is split into 7 archive files; only Comments, Posts and Users are required but after extraction the files need to be renamed to Comments.xml, Posts.xml and Users.xml respectively), and
 * "7-zip":http://www.7-zip.org/ (needed to extract the data dump files)
@@ -87,7 +87,7 @@ bq. If you're using Java 7 on Linux and you see an error similar to the followin
 this is because you have SELinux enabled. You will need to tell SELinux to allow Java to run by using the following command as root (amending the path as necessary) -
 @chcon -t textrel_shlib_t /opt/jre1.7.0_40/lib/i386/server/libjvm.so@
 
-Then type @python -V@ and check that it is version 2.5 or later (and not Python 3).
+Then type @python -V@ and check that it is version 2.5 or later (and not Python 3). Ideally this should be v2.7.6 or later as there have been some reported issues with earlier versions.
 
 If you would rather not put these versions in the PATH (e.g. you don't want to override the default version of Python in your Linux distribution), you can tell Stackdump which Java and/or Python to use explicitly by creating a file named @JAVA_CMD@ or @PYTHON_CMD@ respectively in the Stackdump root directory, and placing the path to the executable in there.
 
