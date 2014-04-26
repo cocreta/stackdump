@@ -12,7 +12,7 @@ h2. Screenshots
 
 h2. System Requirements
 
-Stackdump was written in Python and requires Python 2.5 or later (but not Python 3). It leverages Apache Solr, which requires the Java runtime (JRE), version 6 or later.
+Stackdump was written in Python and requires Python 2.5 or later (but not Python 3). There have been some reported issues with older versions of Python, so the ideal version to run is v2.7.6 (the latest 2.x version, as of writing). Stackdump also leverages Apache Solr, which requires the Java runtime (JRE), version 6 or later.
 
 Besides that, there are no OS-dependent dependencies and should work on any platform that Python and Java run on (although it only comes bundled with Linux scripts at the moment). It was, however, developed and tested on CentOS 5 running Python 2.7 and JRE 6 update 27.
 
