@@ -827,27 +827,31 @@ def _rewrite_html(html, app_url_root, sites_by_urls):
         internal_link = False
         url = t.get('href', None)
         if url:
-            host = urllib2.Request(url).get_host()
-            site = sites_by_urls.get(host, None)
-            if site:
-                # rewrite this URL for stackdump
-                question_id = SE_QUESTION_ID_RE.search(url)
-                if question_id:
-                    question_id = question_id.groupdict()['id']
-                    url = '%s%s/%s' % (app_url_root, site.key, question_id)
-                    t.set('href', url)
-                    t.set('class', t.get('class', '') + ' internal-link')
-                    internal_link = True
-                
-                answer_id = SE_ANSWER_ID_RE.search(url)
-                if answer_id:
-                    answer_id = answer_id.groupdict()['id']
-                    url = '%s%s/a/%s' % (app_url_root, site.key, answer_id)
-                    t.set('href', url)
-                    t.set('class', t.get('class', '') + ' internal-link')
-                    internal_link = True
+            try:
+                host = urllib2.Request(url).get_host()
+            except ValueError:
+                # invalid URL or local anchor, leaving as-is
+                internal_link = True
+            else:
+                site = sites_by_urls.get(host, None)
+                if site:
+                    # rewrite this URL for stackdump
+                    question_id = SE_QUESTION_ID_RE.search(url)
+                    if question_id:
+                        question_id = question_id.groupdict()['id']
+                        url = '%s%s/%s' % (app_url_root, site.key, question_id)
+                        t.set('href', url)
+                        internal_link = True
+                    answer_id = SE_ANSWER_ID_RE.search(url)
+                    if answer_id:
+                        answer_id = answer_id.groupdict()['id']
+                        url = '%s%s/a/%s' % (app_url_root, site.key, answer_id)
+                        t.set('href', url)
+                        internal_link = True
             
-            if not internal_link:
+            if internal_link:
+                t.set('class', t.get('class', '') + ' internal-link')
+            else:
                 t.set('class', t.get('class', '') + ' external-link')
     
     # get a string back
