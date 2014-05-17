@@ -831,7 +831,7 @@ def _rewrite_html(html, app_url_root, sites_by_urls):
                 host = urllib2.Request(url).get_host()
             except ValueError:
                 # invalid URL or local anchor, leaving as-is
-                internal_link = True
+                pass
             else:
                 site = sites_by_urls.get(host, None)
                 if site:
