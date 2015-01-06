@@ -18,7 +18,9 @@ Besides that, there are no OS-dependent dependencies and should work on any plat
 
 You will also need "7-zip":http://www.7-zip.org/ to extract the data dump files, but Stackdump does not use it directly so you can perform the extraction on another machine first.
 
-It is recommended that Stackdump be run on a system with at least 3GB of RAM, particularly if you intend to import StackOverflow into Stackdump. Apache Solr requires a fair bit of memory during the import process. It should also have a fair bit of space available; having at least roughly the space used by the raw, extracted, data dump XML files is a good rule of thumb (note that once imported, the raw data dump XML files are not needed by Stackdump any more).
+The amount of memory required for Stackdump depends on which dataset you want to import. For most datasets, at least 3GB of RAM is preferable. If you want to import StackOverflow, you must use a 64-bit operating system and a 64-bit version of Python, and also have at least 6GB of RAM available (or swap). If you do not have enough RAM available, the import process will likely fail with a _MemoryError_ message at some point.
+
+Make sure you have enough disk space too - having at least roughly the space used by the raw, extracted, data dump XML files available is a good rule of thumb (note that once imported, the raw data dump XML files are not needed by Stackdump any more).
 
 Finally, Stackdump has been tested and works in the latest browsers (IE9, FF10+, Chrome, Safari). It degrades fairly gracefully in older browsers, although some will have rendering issues, e.g. IE8.
 
@@ -51,18 +53,24 @@ In total, the StackOverflow data dump has *15,933,529 posts* (questions and answ
 
 I attempted this on a similarly spec'ed Windows 7 64-bit VM as well - 23 hours later and it is still trying to process the comments. The SQLite, Python or just disk performance is very poor for some reason. Therefore, if you intend on importing StackOverflow, I would advise you to run Stackdump on Linux instead. The smaller sites all complete without a reasonable time though, and there are no perceptible issues with performance as far as I'm aware on Windows.
 
+h3. Reports on importing the StackOverflow data dump, September 2014
+
+Due to the growth of the dataset, the import process now requires at least 6GB of RAM. This also means you must use a 64-bit operating system and a 64-bit version of Python.
+
 h2. Setting up
 
 Stackdump was designed for offline environments or environments with poor internet access, therefore it is bundled with all the dependencies it requires (with the exception of Python, Java and 7-zip). 
 
 As long as you have:
-* "Python":http://python.org/download/, version 2.5 or later but not version 3 (ideally v2.7.6),
+* "Python":http://python.org/download/, version 2.5 or later but not version 3 (tested with v2.7.6),
 * "Java":http://java.com/en/download/manual.jsp, version 6 (1.6) or later,
 * "Stackdump":https://bitbucket.org/samuel.lai/stackdump/downloads,
 * the "StackExchange Data Dump":https://archive.org/details/stackexchange (download the sites you wish to import - note that StackOverflow is split into 7 archive files; only Comments, Posts and Users are required but after extraction the files need to be renamed to Comments.xml, Posts.xml and Users.xml respectively), and
 * "7-zip":http://www.7-zip.org/ (needed to extract the data dump files)
 
 ...you should be able to get an instance up and running.
+
+If you are using a 64-bit operating system, get the 64-bit version of Python.
 
 To provide a better experience, Stackdump can use the RSS feed content to pre-fill some of the required details during the import process, as well as to display the site logos in the app. Stackdump comes bundled with a script that downloads and places these bits in the right places. If you're in a completely offline environment however, it may be worth running this script on a connected box first.
 
