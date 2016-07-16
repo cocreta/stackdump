@@ -1,3 +1,8 @@
+<iframe width="560" height="315" src="https://www.youtube.com/embed/jHEBlHxEKeM" frameborder="0" allowfullscreen></iframe>
+"http://blog.sornram9254.com/stackdump-an-offline-browser-for-stackexchange-stackverflow/":http://blog.sornram9254.com/stackdump-an-offline-browser-for-stackexchange-stackverflow/
+
+- - - - - - - - - - - - - - - - - - - ORIGINAL README - - - - - - - - - - - - - - - - - - -
+
 h1. Stackdump - an offline browser for StackExchange sites.
 
 Stackdump was conceived for those who work in environments that do not have easy access to the StackExchange family of websites. It allows you to host a read-only instance of the StackExchange sites locally, accessible via a web browser.
