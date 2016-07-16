@@ -1,4 +1,6 @@
 <iframe width="560" height="315" src="https://www.youtube.com/embed/jHEBlHxEKeM" frameborder="0" allowfullscreen></iframe>
+
+[![vegas2movieStudio](http://img.youtube.com/vi/jHEBlHxEKeM/0.jpg)](http://www.youtube.com/watch?v=jHEBlHxEKeM "vegas2movieStudio")
 "http://blog.sornram9254.com/stackdump-an-offline-browser-for-stackexchange-stackverflow/":http://blog.sornram9254.com/stackdump-an-offline-browser-for-stackexchange-stackverflow/
 
 - - - - - - - - - - - - - - - - - - - ORIGINAL README - - - - - - - - - - - - - - - - - - -
