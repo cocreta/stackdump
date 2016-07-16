@@ -1,5 +1,4 @@
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/jHEBlHxEKeM/0.jpg)](http://www.youtube.com/watch?v=jHEBlHxEKeM)
-
+Tutorial (Thai language) : http://www.youtube.com/watch?v=jHEBlHxEKeM
 "http://blog.sornram9254.com/stackdump-an-offline-browser-for-stackexchange-stackverflow/":http://blog.sornram9254.com/stackdump-an-offline-browser-for-stackexchange-stackverflow/
 
 - - - - - - - - - - - - - - - - - - - ORIGINAL README - - - - - - - - - - - - - - - - - - -
